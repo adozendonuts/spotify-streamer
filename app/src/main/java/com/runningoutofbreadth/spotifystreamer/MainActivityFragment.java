@@ -1,5 +1,7 @@
 package com.runningoutofbreadth.spotifystreamer;
 
+import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -36,7 +38,90 @@ public class MainActivityFragment extends Fragment {
     private ArrayAdapter<String[]> mArtistAdapter;
     private String search;
 
-    //TODO create a settings menu layout to implement the refresh button as an updater.
+    //declare class that represents each listview row item
+    public class ArtistResult {
+        //fields for pic and artist name
+        protected String thumbnail;
+        protected String artistName;
+
+        //constructor
+        public ArtistResult() {
+            super();
+        }
+
+        public ArtistResult(String artistName, String thumbnail) {
+            this.artistName = artistName;
+            this.thumbnail = thumbnail;
+        }
+
+        //method for passing thumbnailUrl and artist string to object
+        public void setNameAndThumbnail(String[] strings) {
+            thumbnail = strings[0];
+            artistName = strings[1];
+        }
+    }
+
+    public class ArtistAdapter extends ArrayAdapter<ArtistResult> {
+        //using ArrayAdapter that has three params (context, int, array)
+        Context context;
+        int resource;
+        ArtistResult data[] = null;
+
+        //container to reuse views
+        class ArtistHolder {
+            TextView thumbnail;
+            TextView artist;
+        }
+
+        //constructor
+        public ArtistAdapter(Context context, int resource, ArtistResult[] artistResults) {
+            super(context, resource, artistResults);
+            this.resource = resource;
+            this.data = artistResults;
+        }
+
+        //make it so this isn't returning textviews anymore
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            View rowItem = convertView;
+            ArtistHolder artistHolder = null;
+
+            //inflate layouts
+            if (rowItem == null) {
+                LayoutInflater layoutInflater = ((Activity) context).getLayoutInflater();
+                rowItem = layoutInflater.inflate(resource, parent, false);
+
+                artistHolder = new ArtistHolder();
+                artistHolder.thumbnail = (TextView) rowItem.findViewById(R.id.artist_thumbnail);
+                artistHolder.artist = (TextView) rowItem.findViewById(R.id.artist_text_view);
+
+                rowItem.setTag(artistHolder);
+            } else {
+                artistHolder = (ArtistHolder) rowItem.getTag();
+            }
+
+//            //pass info to rowItems
+//            ImageView image = null;
+//            String urlStr = data[position].thumbnail.toString();
+//            if (urlStr == null){
+//                URL url = null;
+//            }else{
+//                try {
+//                    URL url = new URL(urlStr);
+//                } catch (MalformedURLException e) {
+//                    e.printStackTrace();
+//                }
+//            }
+
+            ArtistResult setArtistResult = data[position];
+            artistHolder.thumbnail.setText(setArtistResult.thumbnail);
+            artistHolder.artist.setText(setArtistResult.artistName);
+
+            return rowItem;
+        }
+
+
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -49,17 +134,15 @@ public class MainActivityFragment extends Fragment {
         //search field on top of screen, made so that hitting Next runs search
         final EditText editText = (EditText) rootView.findViewById(R.id.search_edit_text);
 
-        String[][] data = {
-                {"search for something"},
-                {"sup"}
-        };
-
-        //create a list using data above
+        //create an empty nested string arrays to hold each list view item (artist name and pic)
+        String[][] data = {{}};
         List<String[]> results = new ArrayList<String[]>(Arrays.asList(data));
         mArtistAdapter = new ArrayAdapter<String[]>(getActivity(),
                 R.layout.individual_artist,
-                R.id.search_list_item,
+                R.id.artist_text_view,
                 results);
+
+
         final ListView list = (ListView) rootView.findViewById(R.id.artist_list_view);
 
         list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -76,7 +159,7 @@ public class MainActivityFragment extends Fragment {
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
                 v = editText;
                 search = v.getText().toString();
-                search = "beyonce";
+                search = "beyonce"; //TODO remove this test line
                 //check to make sure search actually spits out as string
                 Log.v(LOG_TAG, "THIS IS THE SEARCH: " + search);
 
@@ -102,7 +185,6 @@ public class MainActivityFragment extends Fragment {
         protected List<String[]> results;
 
         protected String[][] doInBackground(String... params) {
-            //TODO create a new class that can contain a pic and a string
 
             SpotifyApi api = new SpotifyApi();
             SpotifyService spotify = api.getService();
@@ -121,7 +203,6 @@ public class MainActivityFragment extends Fragment {
                 String thumbnailUrl;
 
                 for (Artist each : artistNameListItems) {
-                    //for the Log
                     int currentIndex = artistNameListItems.indexOf(each);
 
                     //images
@@ -134,10 +215,10 @@ public class MainActivityFragment extends Fragment {
                         thumbnailUrl = each.images.get(lastOne).url;
                     }
 
-                    //names
+                    //Artist names
                     individualArtistName = each.name;
 
-                    //convert names and images to a list
+                    //convert names and images into a string array
                     String[] nameAndThumbnail = {thumbnailUrl, individualArtistName};
 
                     //append list to results with results.add()
