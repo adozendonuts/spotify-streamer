@@ -1,5 +1,6 @@
 package com.runningoutofbreadth.spotifystreamer;
 
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -14,6 +15,7 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -35,20 +37,51 @@ import kaaes.spotify.webapi.android.models.ArtistsPager;
  * A placeholder fragment containing a simple view.
  */
 public class MainActivityFragment extends Fragment {
+    //TODO once CustomAdapter is finished, change data type for mArtistAdapter
     private ArrayAdapter<String[]> mArtistAdapter;
     private String search;
-    private String[] urls;
+    private List<String> names;
+    private Bitmap defaultThumbnail;
+    private List<Bitmap> thumbnails = new ArrayList<>();
 
     public MainActivityFragment() {
     }
 
+    public class CustomAdapter extends ArrayAdapter<Object>{
+        //fields
+        private Context context;
+        private String[] names;
+        private List<Bitmap> thumbnails;
+
+        //constructor. must convert global names list to String[] array
+        //TODO having different data types drives me mad. Maybe refactor
+        public CustomAdapter(Context context, String[] names, List<Bitmap> thumbnails){
+            super(context, R.layout.individual_artist, names);
+            this.context=context;
+            this.names=names;
+            this.thumbnails=thumbnails;
+        }
+
+        //override getView method
+        @Override
+        public View getView(int position, View view, ViewGroup parent){
+            LayoutInflater inflater = getActivity().getLayoutInflater();
+            View row = inflater.inflate(R.layout.individual_artist, null, true);
+            TextView name = (TextView)row.findViewById(R.id.artist_text_view);
+            ImageView thumbnail = (ImageView)row.findViewById(R.id.artist_thumbnail);
+
+            name.setText(names[position]);
+            thumbnail.setImageBitmap(thumbnails.get(position));
+            return row;
+        }
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
         final String LOG_TAG = FetchArtistData.class.getSimpleName();
-
+        defaultThumbnail = BitmapFactory.decodeResource(getResources(), R.drawable.eigth_notes);
         final View rootView = inflater.inflate(R.layout.fragment_search_artists, container, false);
 
         //search field on top of screen, made so that hitting Next runs search
@@ -61,6 +94,7 @@ public class MainActivityFragment extends Fragment {
                 R.layout.individual_artist,
                 R.id.artist_text_view,
                 results);
+
 
 
         final ListView list = (ListView) rootView.findViewById(R.id.artist_list_view);
@@ -96,12 +130,8 @@ public class MainActivityFragment extends Fragment {
         return rootView;
     }
 
-
     public class FetchArtistData extends AsyncTask<String, Void, String[][]> {
-
         private final String LOG_TAG = FetchArtistData.class.getSimpleName();
-
-        protected List<String[]> results;
 
         protected String[][] doInBackground(String... params) {
 
@@ -173,9 +203,9 @@ public class MainActivityFragment extends Fragment {
         }
     }
 
-    //runs right after FetchArtistData. Downloads bitmap, puts it into a list to be pulled by custom
-    // arrayadapter.
     public class BitmapDownloader extends AsyncTask<String, Void, List<Bitmap>> {
+        //runs right after FetchArtistData. Downloads bitmap, puts it into a list to be pulled by custom
+        // arrayadapter.
         private final String LOG_TAG = BitmapDownloader.class.getSimpleName();
 
         @Override
@@ -187,25 +217,24 @@ public class MainActivityFragment extends Fragment {
             HttpURLConnection urlConnection;
             InputStream in;
 
-            //TODO make this create an empty result for every null position in thumbnailList
             if (mArtAdaptSize != 0) {
                 for (int i = 0; i < mArtAdaptSize; i++) {
                     String[] artistStrings = mArtistAdapter.getItem(i);
                     try {
                         thumbUrl = new URL(artistStrings[0]);
                         urlConnection = (HttpURLConnection) thumbUrl.openConnection();
-                            try {
-                                in = new BufferedInputStream(urlConnection.getInputStream());
-                                thumbnail = BitmapFactory.decodeStream(in);
-                                thumbnailList.add(thumbnail);
-                            } catch (Exception e) {
-                                Log.v(LOG_TAG, "no connection possible, bruh");
-                            } finally {
-                                urlConnection.disconnect();
-                            }
+                        try {
+                            in = new BufferedInputStream(urlConnection.getInputStream());
+                            thumbnail = BitmapFactory.decodeStream(in);
+                            thumbnailList.add(thumbnail);
+                        } catch (Exception e) {
+                            Log.v(LOG_TAG, "no connection possible, bruh");
+                        } finally {
+                            urlConnection.disconnect();
+                        }
                     } catch (Exception e) {
-                        Log.v(LOG_TAG, "no url, bruh");
                         thumbnailList.add(null);
+                        //Log.v(LOG_TAG, "no url, bruh");
                     }
                 }
             }
@@ -214,10 +243,19 @@ public class MainActivityFragment extends Fragment {
 
         @Override
         protected void onPostExecute(List<Bitmap> result) {
-            int x = 0;
-            for (Bitmap each : result) {
-                x++;
-                Log.v(LOG_TAG, "HEY YOU FOUND ME" + each + "image number: " + x);
+            thumbnails.clear();
+            for (int i = 0; i < result.size(); i++) {
+                try {
+                    Bitmap imageContainer = result.get(i);
+                    if (result.get(i) == null) {
+                        thumbnails.add(null);
+                    } else {
+                        thumbnails.add(imageContainer);
+                    }
+                } catch (Exception e) {
+                    Log.v(LOG_TAG, "Um.. this didn't work: " + e);
+                }
+                Log.v(LOG_TAG, "Object " + thumbnails.get(i) + " was added at position: " + i);
             }
         }
     }
