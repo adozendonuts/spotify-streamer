@@ -173,6 +173,8 @@ public class MainActivityFragment extends Fragment {
         }
     }
 
+    //runs right after FetchArtistData. Downloads bitmap, puts it into a list to be pulled by custom
+    // arrayadapter.
     public class BitmapDownloader extends AsyncTask<String, Void, List<Bitmap>> {
         private final String LOG_TAG = BitmapDownloader.class.getSimpleName();
 
@@ -185,25 +187,25 @@ public class MainActivityFragment extends Fragment {
             HttpURLConnection urlConnection;
             InputStream in;
 
-
+            //TODO make this create an empty result for every null position in thumbnailList
             if (mArtAdaptSize != 0) {
                 for (int i = 0; i < mArtAdaptSize; i++) {
                     String[] artistStrings = mArtistAdapter.getItem(i);
                     try {
                         thumbUrl = new URL(artistStrings[0]);
                         urlConnection = (HttpURLConnection) thumbUrl.openConnection();
-                        try{
-                            in = new BufferedInputStream(urlConnection.getInputStream());
-                            thumbnail = BitmapFactory.decodeStream(in);
-                            thumbnailList.add(thumbnail);
-                        }catch(Exception e) {
-                            Log.v(LOG_TAG, "no connection possible, bruh");
-                        }finally{
-                            urlConnection.disconnect();
-                        }
-
+                            try {
+                                in = new BufferedInputStream(urlConnection.getInputStream());
+                                thumbnail = BitmapFactory.decodeStream(in);
+                                thumbnailList.add(thumbnail);
+                            } catch (Exception e) {
+                                Log.v(LOG_TAG, "no connection possible, bruh");
+                            } finally {
+                                urlConnection.disconnect();
+                            }
                     } catch (Exception e) {
                         Log.v(LOG_TAG, "no url, bruh");
+                        thumbnailList.add(null);
                     }
                 }
             }
@@ -211,9 +213,11 @@ public class MainActivityFragment extends Fragment {
         }
 
         @Override
-        protected void onPostExecute(List<Bitmap> result){
-            for (Bitmap each : result){
-                Log.v(LOG_TAG, "HEY YOU FOUND ME" + each);
+        protected void onPostExecute(List<Bitmap> result) {
+            int x = 0;
+            for (Bitmap each : result) {
+                x++;
+                Log.v(LOG_TAG, "HEY YOU FOUND ME" + each + "image number: " + x);
             }
         }
     }
