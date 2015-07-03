@@ -1,8 +1,8 @@
 package com.runningoutofbreadth.spotifystreamer;
 
-import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -17,6 +17,10 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import java.io.BufferedInputStream;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -31,97 +35,13 @@ import kaaes.spotify.webapi.android.models.ArtistsPager;
  * A placeholder fragment containing a simple view.
  */
 public class MainActivityFragment extends Fragment {
+    private ArrayAdapter<String[]> mArtistAdapter;
+    private String search;
+    private String[] urls;
 
     public MainActivityFragment() {
     }
 
-    private ArrayAdapter<String[]> mArtistAdapter;
-    private String search;
-
-    //declare class that represents each listview row item
-    public class ArtistResult {
-        //fields for pic and artist name
-        protected String thumbnail;
-        protected String artistName;
-
-        //constructor
-        public ArtistResult() {
-            super();
-        }
-
-        public ArtistResult(String artistName, String thumbnail) {
-            this.artistName = artistName;
-            this.thumbnail = thumbnail;
-        }
-
-        //method for passing thumbnailUrl and artist string to object
-        public void setNameAndThumbnail(String[] strings) {
-            thumbnail = strings[0];
-            artistName = strings[1];
-        }
-    }
-
-    public class ArtistAdapter extends ArrayAdapter<ArtistResult> {
-        //using ArrayAdapter that has three params (context, int, array)
-        Context context;
-        int resource;
-        ArtistResult data[] = null;
-
-        //container to reuse views
-        class ArtistHolder {
-            TextView thumbnail;
-            TextView artist;
-        }
-
-        //constructor
-        public ArtistAdapter(Context context, int resource, ArtistResult[] artistResults) {
-            super(context, resource, artistResults);
-            this.resource = resource;
-            this.data = artistResults;
-        }
-
-        //make it so this isn't returning textviews anymore
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-            View rowItem = convertView;
-            ArtistHolder artistHolder = null;
-
-            //inflate layouts
-            if (rowItem == null) {
-                LayoutInflater layoutInflater = ((Activity) context).getLayoutInflater();
-                rowItem = layoutInflater.inflate(resource, parent, false);
-
-                artistHolder = new ArtistHolder();
-                artistHolder.thumbnail = (TextView) rowItem.findViewById(R.id.artist_thumbnail);
-                artistHolder.artist = (TextView) rowItem.findViewById(R.id.artist_text_view);
-
-                rowItem.setTag(artistHolder);
-            } else {
-                artistHolder = (ArtistHolder) rowItem.getTag();
-            }
-
-//            //pass info to rowItems
-//            ImageView image = null;
-//            String urlStr = data[position].thumbnail.toString();
-//            if (urlStr == null){
-//                URL url = null;
-//            }else{
-//                try {
-//                    URL url = new URL(urlStr);
-//                } catch (MalformedURLException e) {
-//                    e.printStackTrace();
-//                }
-//            }
-
-            ArtistResult setArtistResult = data[position];
-            artistHolder.thumbnail.setText(setArtistResult.thumbnail);
-            artistHolder.artist.setText(setArtistResult.artistName);
-
-            return rowItem;
-        }
-
-
-    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -170,7 +90,6 @@ public class MainActivityFragment extends Fragment {
                 }
                 return true;
             }
-
         });
 
         list.setAdapter(mArtistAdapter);
@@ -239,18 +158,65 @@ public class MainActivityFragment extends Fragment {
             return null;
         }
 
-        //TODO refactor to pass in new lists as each list element
         @Override
         protected void onPostExecute(String[][] result) {
+            //takes all nested String arrays and adds them to mArtistAdapter
             if (result != null) {
                 mArtistAdapter.clear();
                 for (String[] each : result) {
                     mArtistAdapter.add(each);
                     Log.v(LOG_TAG, "this is the mArtistAdapter entry:  " + each[0] + "    " + each[1]);
                 }
-
+                BitmapDownloader bitmapDownloader = new BitmapDownloader();
+                bitmapDownloader.execute();
             }
         }
-
     }
+
+    public class BitmapDownloader extends AsyncTask<String, Void, List<Bitmap>> {
+        private final String LOG_TAG = BitmapDownloader.class.getSimpleName();
+
+        @Override
+        protected List<Bitmap> doInBackground(String... params) {
+            List<Bitmap> thumbnailList = new ArrayList<Bitmap>();
+            Bitmap thumbnail;
+            int mArtAdaptSize = mArtistAdapter.getCount();
+            URL thumbUrl;
+            HttpURLConnection urlConnection;
+            InputStream in;
+
+
+            if (mArtAdaptSize != 0) {
+                for (int i = 0; i < mArtAdaptSize; i++) {
+                    String[] artistStrings = mArtistAdapter.getItem(i);
+                    try {
+                        thumbUrl = new URL(artistStrings[0]);
+                        urlConnection = (HttpURLConnection) thumbUrl.openConnection();
+                        try{
+                            in = new BufferedInputStream(urlConnection.getInputStream());
+                            thumbnail = BitmapFactory.decodeStream(in);
+                            thumbnailList.add(thumbnail);
+                        }catch(Exception e) {
+                            Log.v(LOG_TAG, "no connection possible, bruh");
+                        }finally{
+                            urlConnection.disconnect();
+                        }
+
+                    } catch (Exception e) {
+                        Log.v(LOG_TAG, "no url, bruh");
+                    }
+                }
+            }
+            return thumbnailList;
+        }
+
+        @Override
+        protected void onPostExecute(List<Bitmap> result){
+            for (Bitmap each : result){
+                Log.v(LOG_TAG, "HEY YOU FOUND ME" + each);
+            }
+        }
+    }
+
 }
+
