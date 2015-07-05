@@ -2,8 +2,6 @@ package com.runningoutofbreadth.spotifystreamer;
 
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -19,12 +17,9 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
-import java.io.BufferedInputStream;
-import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
+import com.squareup.picasso.Picasso;
+
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import kaaes.spotify.webapi.android.SpotifyApi;
@@ -38,41 +33,50 @@ import kaaes.spotify.webapi.android.models.ArtistsPager;
  */
 public class MainActivityFragment extends Fragment {
     //TODO once CustomAdapter is finished, change data type for mArtistAdapter
-    private ArrayAdapter<String[]> mArtistAdapter;
+    private CustomAdapter mArtistAdapter;
     private String search;
-    private List<String> names;
-    private Bitmap defaultThumbnail;
-    private List<Bitmap> thumbnails = new ArrayList<>();
-
+    private List<String> mNames = new ArrayList<>();
+    private List<String> mThumbUrls = new ArrayList<>();
     public MainActivityFragment() {
     }
 
-    public class CustomAdapter extends ArrayAdapter<Object>{
+    public class CustomAdapter extends ArrayAdapter {
         //fields
-        private Context context;
-        private String[] names;
-        private List<Bitmap> thumbnails;
 
-        //constructor. must convert global names list to String[] array
-        //TODO having different data types drives me mad. Maybe refactor
-        public CustomAdapter(Context context, String[] names, List<Bitmap> thumbnails){
-            super(context, R.layout.individual_artist, names);
-            this.context=context;
-            this.names=names;
-            this.thumbnails=thumbnails;
+        //constructor. must convert global mNames list to String[] array
+        public CustomAdapter(Context context, List<String> items) {
+            super(context, 0, items);
+        }
+
+        //TODO holder
+        private class ArtistResult {
+            ImageView thumb;
+            TextView name;
         }
 
         //override getView method
         @Override
-        public View getView(int position, View view, ViewGroup parent){
-            LayoutInflater inflater = getActivity().getLayoutInflater();
-            View row = inflater.inflate(R.layout.individual_artist, null, true);
-            TextView name = (TextView)row.findViewById(R.id.artist_text_view);
-            ImageView thumbnail = (ImageView)row.findViewById(R.id.artist_thumbnail);
+        public View getView(int position, View convertView, ViewGroup parent) {
+            View rowView = convertView;
 
-            name.setText(names[position]);
-            thumbnail.setImageBitmap(thumbnails.get(position));
-            return row;
+            if (rowView == null) {
+                LayoutInflater inflater = (LayoutInflater) this.getContext().
+                        getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+                rowView = inflater.inflate(R.layout.individual_artist, parent, false);
+            }
+
+            TextView name = (TextView) rowView.findViewById(R.id.individual_artist_text_view);
+            ImageView thumbnail = (ImageView) rowView.findViewById(R.id.artist_thumbnail);
+
+            name.setText(mNames.get(position));
+            if (!mThumbUrls.get(position).isEmpty()) {
+                Picasso.with(getContext()).load(mThumbUrls.get(position)).into(thumbnail);
+            } else {
+                thumbnail.setImageResource(R.drawable.eigth_notes);
+            }
+            Log.v("yo what's up", "this?" + name + thumbnail + mNames);
+
+            return rowView;
         }
     }
 
@@ -81,44 +85,38 @@ public class MainActivityFragment extends Fragment {
                              Bundle savedInstanceState) {
 
         final String LOG_TAG = FetchArtistData.class.getSimpleName();
-        defaultThumbnail = BitmapFactory.decodeResource(getResources(), R.drawable.eigth_notes);
         final View rootView = inflater.inflate(R.layout.fragment_search_artists, container, false);
 
         //search field on top of screen, made so that hitting Next runs search
         final EditText editText = (EditText) rootView.findViewById(R.id.search_edit_text);
 
-        //create an empty nested string arrays to hold each list view item (artist name and pic)
-        String[][] data = {{}};
-        List<String[]> results = new ArrayList<String[]>(Arrays.asList(data));
-        mArtistAdapter = new ArrayAdapter<String[]>(getActivity(),
-                R.layout.individual_artist,
-                R.id.artist_text_view,
-                results);
+        //create empty nested string arrays to hold each list view item (artist name and pic)
+        String[] results = new String[mNames.size()];
+        mNames.toArray(results);
+        mArtistAdapter = new CustomAdapter(getActivity(), mNames);
 
-
-
+        //onClick, open up new activity
         final ListView list = (ListView) rootView.findViewById(R.id.artist_list_view);
-
         list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                String[] track = mArtistAdapter.getItem(position);
-                Intent intent = new Intent(getActivity(), ArtistTracks.class)
-                        .putExtra(Intent.EXTRA_TEXT, track);
+                Object track = mArtistAdapter.getItem(position);
+                Intent intent = new Intent(getActivity(), ArtistTracks.class);
+                //.putExtra(Intent.EXTRA_TEXT, track);
                 startActivity(intent);
             }
         });
 
+        //once you hit enter key (done/next/etc.), Asynctask runs
         editText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
                 v = editText;
                 search = v.getText().toString();
-                search = "beyonce"; //TODO remove this test line
                 //check to make sure search actually spits out as string
                 Log.v(LOG_TAG, "THIS IS THE SEARCH: " + search);
 
                 //starts up Spotify built-in http connection, returns goodies
-                if (search != null) {
+                if (!search.isEmpty()) {
                     FetchArtistData fetchArtistData = new FetchArtistData();
                     fetchArtistData.execute(search);
                 }
@@ -164,10 +162,10 @@ public class MainActivityFragment extends Fragment {
                         thumbnailUrl = each.images.get(lastOne).url;
                     }
 
-                    //Artist names
+                    //Artist mNames
                     individualArtistName = each.name;
 
-                    //convert names and images into a string array
+                    //convert mNames and images into a string array
                     String[] nameAndThumbnail = {thumbnailUrl, individualArtistName};
 
                     //append list to results with results.add()
@@ -192,70 +190,16 @@ public class MainActivityFragment extends Fragment {
         protected void onPostExecute(String[][] result) {
             //takes all nested String arrays and adds them to mArtistAdapter
             if (result != null) {
-                mArtistAdapter.clear();
+                mNames.clear();
+                mThumbUrls.clear();
                 for (String[] each : result) {
-                    mArtistAdapter.add(each);
-                    Log.v(LOG_TAG, "this is the mArtistAdapter entry:  " + each[0] + "    " + each[1]);
+                    String url = each[0];
+                    String artistName = each[1];
+                    mThumbUrls.add(url);
+                    mNames.add(artistName);
+                    Log.v(LOG_TAG, "this is the mNames entry:  " + artistName);
+                    Log.v(LOG_TAG, "this is the url entry:  " + url);
                 }
-                BitmapDownloader bitmapDownloader = new BitmapDownloader();
-                bitmapDownloader.execute();
-            }
-        }
-    }
-
-    public class BitmapDownloader extends AsyncTask<String, Void, List<Bitmap>> {
-        //runs right after FetchArtistData. Downloads bitmap, puts it into a list to be pulled by custom
-        // arrayadapter.
-        private final String LOG_TAG = BitmapDownloader.class.getSimpleName();
-
-        @Override
-        protected List<Bitmap> doInBackground(String... params) {
-            List<Bitmap> thumbnailList = new ArrayList<Bitmap>();
-            Bitmap thumbnail;
-            int mArtAdaptSize = mArtistAdapter.getCount();
-            URL thumbUrl;
-            HttpURLConnection urlConnection;
-            InputStream in;
-
-            if (mArtAdaptSize != 0) {
-                for (int i = 0; i < mArtAdaptSize; i++) {
-                    String[] artistStrings = mArtistAdapter.getItem(i);
-                    try {
-                        thumbUrl = new URL(artistStrings[0]);
-                        urlConnection = (HttpURLConnection) thumbUrl.openConnection();
-                        try {
-                            in = new BufferedInputStream(urlConnection.getInputStream());
-                            thumbnail = BitmapFactory.decodeStream(in);
-                            thumbnailList.add(thumbnail);
-                        } catch (Exception e) {
-                            Log.v(LOG_TAG, "no connection possible, bruh");
-                        } finally {
-                            urlConnection.disconnect();
-                        }
-                    } catch (Exception e) {
-                        thumbnailList.add(null);
-                        //Log.v(LOG_TAG, "no url, bruh");
-                    }
-                }
-            }
-            return thumbnailList;
-        }
-
-        @Override
-        protected void onPostExecute(List<Bitmap> result) {
-            thumbnails.clear();
-            for (int i = 0; i < result.size(); i++) {
-                try {
-                    Bitmap imageContainer = result.get(i);
-                    if (result.get(i) == null) {
-                        thumbnails.add(null);
-                    } else {
-                        thumbnails.add(imageContainer);
-                    }
-                } catch (Exception e) {
-                    Log.v(LOG_TAG, "Um.. this didn't work: " + e);
-                }
-                Log.v(LOG_TAG, "Object " + thumbnails.get(i) + " was added at position: " + i);
             }
         }
     }
