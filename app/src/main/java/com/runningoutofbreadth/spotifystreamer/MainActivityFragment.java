@@ -37,16 +37,15 @@ public class MainActivityFragment extends Fragment {
     private String search;
     private List<String> mNames = new ArrayList<>();
     private List<String> mThumbUrls = new ArrayList<>();
+    private List<String> mArtistIds = new ArrayList<>();
 
     public MainActivityFragment() {
     }
 
     public class CustomAdapter extends ArrayAdapter {
-        //fields
-
-        //constructor. must convert global mNames list to String[] array
-        public CustomAdapter(Context context, List<String> items) {
-            super(context, 0, items);
+        //constructor.
+        public CustomAdapter(Context context, int resource, List<String> items) {
+            super(context, resource, items);
         }
 
         //TODO holder
@@ -73,10 +72,9 @@ public class MainActivityFragment extends Fragment {
             if (!mThumbUrls.get(position).isEmpty()) {
                 Picasso.with(getContext()).load(mThumbUrls.get(position)).into(thumbnail);
             } else {
+                //if no images (no url), use default picture
                 thumbnail.setImageResource(R.drawable.eigth_notes);
             }
-            Log.v("yo what's up", "this?" + name + thumbnail + mNames);
-
             return rowView;
         }
     }
@@ -94,7 +92,7 @@ public class MainActivityFragment extends Fragment {
         //create empty nested string arrays to hold each list view item (artist name and pic)
         String[] results = new String[mNames.size()];
         mNames.toArray(results);
-        mArtistAdapter = new CustomAdapter(getActivity(), mNames);
+        mArtistAdapter = new CustomAdapter(getActivity(), R.layout.individual_artist, mNames);
 
         //onClick, open up new activity
         final ListView list = (ListView) rootView.findViewById(R.id.artist_list_view);
@@ -149,6 +147,7 @@ public class MainActivityFragment extends Fragment {
                 //get smallest picture by accessing last item in images array
                 String individualArtistName;
                 String thumbnailUrl;
+                String artistId;
 
                 for (Artist each : artistNameListItems) {
                     int currentIndex = artistNameListItems.indexOf(each);
@@ -167,14 +166,16 @@ public class MainActivityFragment extends Fragment {
                         thumbnailUrl = each.images.get(lastOne).url;
                     }
 
-                    //Artist mNames
+                    //Artist mNames and mArtistIds;
                     individualArtistName = each.name;
+                    artistId = each.id;
+
 
                     //convert mNames and images into a string array
-                    String[] nameAndThumbnail = {thumbnailUrl, individualArtistName};
+                    String[] nameThumbId = {thumbnailUrl, individualArtistName, artistId};
 
                     //append list to results with results.add()
-                    artistListString[currentIndex] = nameAndThumbnail;
+                    artistListString[currentIndex] = nameThumbId;
                 }
             } catch (Exception e) {
                 Log.e(LOG_TAG, "what happened?" + e);
@@ -200,10 +201,13 @@ public class MainActivityFragment extends Fragment {
                 for (String[] each : result) {
                     String url = each[0];
                     String artistName = each[1];
+                    String artistId = each[2];
                     mThumbUrls.add(url);
                     mNames.add(artistName);
-                    Log.v(LOG_TAG, "this is the mNames entry:  " + artistName);
+                    mArtistIds.add(artistId);
+                    Log.v(LOG_TAG, "this is the names entry:  " + artistName);
                     Log.v(LOG_TAG, "this is the url entry:  " + url);
+                    Log.v(LOG_TAG, "this is the id entry:  " + artistId);
                 }
             }
         }

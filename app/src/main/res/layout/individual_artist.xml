@@ -5,10 +5,10 @@
     android:orientation="horizontal">
 
     <ImageView
-        android:background="#FFFFFF"
         android:id="@+id/artist_thumbnail"
         android:layout_width="72dp"
         android:layout_height="match_parent"
+        android:background="#FFFFFF"
         android:scaleType="fitCenter"
         android:src="@mipmap/ic_launcher" />
 
