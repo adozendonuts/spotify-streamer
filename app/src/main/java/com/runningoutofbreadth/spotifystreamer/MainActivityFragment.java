@@ -37,6 +37,7 @@ public class MainActivityFragment extends Fragment {
     private String search;
     private List<String> mNames = new ArrayList<>();
     private List<String> mThumbUrls = new ArrayList<>();
+
     public MainActivityFragment() {
     }
 
@@ -100,9 +101,9 @@ public class MainActivityFragment extends Fragment {
         list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Object track = mArtistAdapter.getItem(position);
-                Intent intent = new Intent(getActivity(), ArtistTracks.class);
-                //.putExtra(Intent.EXTRA_TEXT, track);
+                String track = mArtistAdapter.getItem(position).toString();
+                Intent intent = new Intent(getActivity(), ArtistTracks.class)
+                        .putExtra(Intent.EXTRA_TEXT, track);
                 startActivity(intent);
             }
         });
@@ -152,13 +153,17 @@ public class MainActivityFragment extends Fragment {
                 for (Artist each : artistNameListItems) {
                     int currentIndex = artistNameListItems.indexOf(each);
 
-                    //images
+                    //images. if many images, get 2nd to smallest. else, get smallest
                     int lastOne;
                     int imageListSize = each.images.size();
                     if (imageListSize == 0) {
                         thumbnailUrl = "";
                     } else {
-                        lastOne = imageListSize - 1;
+                        if (imageListSize > 1) {
+                            lastOne = imageListSize - 2;
+                        } else {
+                            lastOne = imageListSize - 1;
+                        }
                         thumbnailUrl = each.images.get(lastOne).url;
                     }
 
