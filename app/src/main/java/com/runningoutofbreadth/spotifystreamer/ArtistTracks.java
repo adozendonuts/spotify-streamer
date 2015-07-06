@@ -14,7 +14,7 @@ public class ArtistTracks extends ActionBarActivity {
         setContentView(R.layout.activity_artist_tracks);
         if (savedInstanceState != null) {
             getSupportFragmentManager().beginTransaction()
-                    .add(R.id.fragment, new ArtistTracksFragment()).commit();
+                    .add(R.id.top_tracks_fragment, new ArtistTracksFragment()).commit();
         }
     }
 

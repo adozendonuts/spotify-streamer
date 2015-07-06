@@ -32,7 +32,7 @@ import kaaes.spotify.webapi.android.models.ArtistsPager;
  * A placeholder fragment containing a simple view.
  */
 public class MainActivityFragment extends Fragment {
-    //TODO once CustomAdapter is finished, change data type for mArtistAdapter
+    //TODO make mNames, mThumbUrls, mArtistIDs part of a class (maybe)
     private CustomAdapter mArtistAdapter;
     private String search;
     private List<String> mNames = new ArrayList<>();
@@ -99,9 +99,9 @@ public class MainActivityFragment extends Fragment {
         list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                String track = mArtistAdapter.getItem(position).toString();
+                String artistId = mArtistIds.get(position);
                 Intent intent = new Intent(getActivity(), ArtistTracks.class)
-                        .putExtra(Intent.EXTRA_TEXT, track);
+                        .putExtra(Intent.EXTRA_TEXT, artistId);
                 startActivity(intent);
             }
         });
@@ -111,8 +111,9 @@ public class MainActivityFragment extends Fragment {
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
                 v = editText;
                 search = v.getText().toString();
+                search = "muse";
                 //check to make sure search actually spits out as string
-                Log.v(LOG_TAG, "THIS IS THE SEARCH: " + search);
+//                Log.v(LOG_TAG, "THIS IS THE SEARCH: " + search);
 
                 //starts up Spotify built-in http connection, returns goodies
                 if (!search.isEmpty()) {
@@ -140,7 +141,7 @@ public class MainActivityFragment extends Fragment {
             // see how many artistResults are returned. expected 20
             int size = artistNameListItems.size();
             String[][] artistListString = new String[size][2];
-            Log.v(LOG_TAG, size + " ITEMS: " + artistNameListItems.toString());
+//            Log.v(LOG_TAG, size + " ITEMS: " + artistNameListItems.toString());
 
             try {
 
@@ -205,9 +206,9 @@ public class MainActivityFragment extends Fragment {
                     mThumbUrls.add(url);
                     mNames.add(artistName);
                     mArtistIds.add(artistId);
-                    Log.v(LOG_TAG, "this is the names entry:  " + artistName);
-                    Log.v(LOG_TAG, "this is the url entry:  " + url);
-                    Log.v(LOG_TAG, "this is the id entry:  " + artistId);
+//                    Log.v(LOG_TAG, "this is the names entry:  " + artistName);
+//                    Log.v(LOG_TAG, "this is the url entry:  " + url);
+//                    Log.v(LOG_TAG, "this is the id entry:  " + artistId);
                 }
             }
         }
