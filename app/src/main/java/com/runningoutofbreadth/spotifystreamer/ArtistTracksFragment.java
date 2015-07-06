@@ -10,7 +10,11 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.TextView;
+
+import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -20,6 +24,7 @@ import java.util.Map;
 
 import kaaes.spotify.webapi.android.SpotifyApi;
 import kaaes.spotify.webapi.android.SpotifyService;
+import kaaes.spotify.webapi.android.models.Image;
 import kaaes.spotify.webapi.android.models.Track;
 import kaaes.spotify.webapi.android.models.Tracks;
 
@@ -29,9 +34,7 @@ import kaaes.spotify.webapi.android.models.Tracks;
  */
 public class ArtistTracksFragment extends Fragment {
     private String mArtistId;
-    private Intent mIntent;
-    private ArrayAdapter<String> mTrackAdapter;
-    private TracksAdapter adapter;
+    private TracksAdapter tracksAdapter;
     private List<Track> mTracks = new ArrayList<>();
     final String LOG_TAG = "ARTIST TRACKS LOGGING";
 
@@ -39,9 +42,11 @@ public class ArtistTracksFragment extends Fragment {
     }
 
     public class TracksAdapter extends ArrayAdapter {
+        private List<Track> tracks;
 
         public TracksAdapter(Context context, int resource, List<Track> tracks) {
             super(context, resource, tracks);
+            this.tracks = tracks;
         }
 
         @Override
@@ -51,7 +56,34 @@ public class ArtistTracksFragment extends Fragment {
                 LayoutInflater inflater = (LayoutInflater) this.getContext().getSystemService(
                         Context.LAYOUT_INFLATER_SERVICE);
                 rowView = inflater.inflate(R.layout.individual_track, null);
-                Log.v(LOG_TAG, "this is the rowView" + rowView.toString());
+
+                String trackTitle = tracks.get(position).name;
+                String album = tracks.get(position).album.name;
+                List<Image> albumImages = tracks.get(position).album.images;
+                int lastOne = 0;
+                String url;
+
+                TextView trackTitleView = (TextView) rowView.findViewById(R.id.track_title_text_view);
+                TextView albumTitleView = (TextView) rowView.findViewById(R.id.album_text_view);
+                ImageView albumImageView = (ImageView) rowView.findViewById(R.id.album_thumbnail);
+
+                try {
+                    if (albumImages.size() > 0) {
+                        lastOne = albumImages.size() - 1;
+                        url = albumImages.get(lastOne).url;
+                        Picasso.with(getContext()).load(url).into(albumImageView);
+                    } else {
+                        albumImageView.setImageResource(R.drawable.eigth_notes);
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    Log.v(LOG_TAG, "No pictures, it seems." + e);
+                }
+
+
+                trackTitleView.setText(trackTitle);
+                albumTitleView.setText(album);
+
             }
             return rowView;
         }
@@ -62,31 +94,25 @@ public class ArtistTracksFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
-        mIntent = getActivity().getIntent();
+        Intent intent = getActivity().getIntent();
         final View rootView = inflater.inflate(R.layout.fragment_artist_tracks, container, false);
 
-        if (mIntent != null && mIntent.hasExtra(Intent.EXTRA_TEXT)) {
-            mArtistId = mIntent.getStringExtra(Intent.EXTRA_TEXT);
-            mArtistId = "12Chz98pHFMPJEknJQMWvI";
-            Log.v(LOG_TAG, "this is mArtistId: " + mArtistId);
+        if (intent != null && intent.hasExtra(Intent.EXTRA_TEXT)) {
+            mArtistId = intent.getStringExtra(Intent.EXTRA_TEXT);
         }
 
-        adapter = new TracksAdapter(rootView.getContext(), R.layout.individual_track, mTracks);
-//        mTrackAdapter = new ArrayAdapter<String>(rootView.getContext(),
-//                R.layout.fragment_artist_tracks,
-//                R.layout.individual_track,
-//                testArray);
+        tracksAdapter = new TracksAdapter(rootView.getContext(), R.layout.individual_track, mTracks);
+
         ListView list = (ListView) rootView.findViewById(R.id.track_list_view);
         FetchTracks fetchTracks = new FetchTracks();
         fetchTracks.execute(mArtistId);
 
-        list.setAdapter(adapter);
+        list.setAdapter(tracksAdapter);
         return rootView;
     }
 
     public class FetchTracks extends AsyncTask<String, Void, Tracks> {
         private final String LOG_TAG = FetchTracks.class.getSimpleName();
-
 
         protected Tracks doInBackground(String... params) {
             SpotifyApi api = new SpotifyApi();
@@ -101,15 +127,15 @@ public class ArtistTracksFragment extends Fragment {
 
         @Override
         public void onPostExecute(Tracks result) {
-            Log.v(LOG_TAG, "M TRACKS SIZE = : " + adapter.getCount());
-            adapter.clear();
+            Log.v(LOG_TAG, "M TRACKS SIZE = : " + tracksAdapter.getCount());
+            tracksAdapter.clear();
             if (result.tracks != null) {
                 for (Track each : result.tracks) {
-                    adapter.add(each);
+                    tracksAdapter.add(each);
                 }
             }
             Log.v(LOG_TAG, "here are the results" + result.tracks);
-            Log.v(LOG_TAG, "Adapter's NEW SIZE = : " + adapter.getCount());
+            Log.v(LOG_TAG, "Adapter's NEW SIZE = : " + tracksAdapter.getCount());
         }
     }
 }

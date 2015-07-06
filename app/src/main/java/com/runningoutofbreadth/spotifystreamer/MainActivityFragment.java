@@ -65,8 +65,8 @@ public class MainActivityFragment extends Fragment {
                 rowView = inflater.inflate(R.layout.individual_artist, parent, false);
             }
 
-            TextView name = (TextView) rowView.findViewById(R.id.individual_artist_text_view);
-            ImageView thumbnail = (ImageView) rowView.findViewById(R.id.artist_thumbnail);
+            TextView name = (TextView) rowView.findViewById(R.id.artist_name_text_view);
+            ImageView thumbnail = (ImageView) rowView.findViewById(R.id.artist_thumbnail_image_view);
 
             name.setText(mNames.get(position));
             if (!mThumbUrls.get(position).isEmpty()) {

@@ -6,9 +6,10 @@
 
     <ImageView
         android:id="@+id/album_thumbnail"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="72dp"
+        android:layout_height="72dp"
         android:layout_weight="0"
+        android:scaleType="fitCenter"
         android:src="@mipmap/ic_launcher" />
 
     <LinearLayout
@@ -17,7 +18,7 @@
         android:orientation="vertical">
 
         <TextView
-            android:id="@+id/individual_track_text_view"
+            android:id="@+id/track_title_text_view"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -27,7 +28,7 @@
             android:text="@string/track" />
 
         <TextView
-            android:id="@+id/individual_album_text_view"
+            android:id="@+id/album_text_view"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_weight="1"
