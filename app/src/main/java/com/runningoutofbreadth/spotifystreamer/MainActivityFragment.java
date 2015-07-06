@@ -6,6 +6,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -16,6 +17,7 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.squareup.picasso.Picasso;
 
@@ -93,7 +95,6 @@ public class MainActivityFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
-        final String LOG_TAG = FetchArtistData.class.getSimpleName();
         final View rootView = inflater.inflate(R.layout.fragment_search_artists, container, false);
 
         //search field on top of screen, made so that hitting Next runs search
@@ -101,7 +102,7 @@ public class MainActivityFragment extends Fragment {
 
         mArtistAdapter = new ArtistAdapter(getActivity(), R.layout.individual_artist, mArtists);
 
-        //onClick, open up new activity
+        //instantiate listview. onClick, open up new activity
         final ListView list = (ListView) rootView.findViewById(R.id.artist_list_view);
         list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -118,15 +119,13 @@ public class MainActivityFragment extends Fragment {
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
                 v = editText;
                 search = v.getText().toString();
-                search = "muse";
-                //check to make sure search actually spits out as string
-//                Log.v(LOG_TAG, "THIS IS THE SEARCH: " + search);
 
                 //starts up Spotify built-in http connection, returns goodies
                 if (!search.isEmpty()) {
                     FetchArtistData fetchArtistData = new FetchArtistData();
                     fetchArtistData.execute(search);
                 }
+                //TODO make keyboard disappear after search
                 return true;
             }
         });
@@ -150,10 +149,21 @@ public class MainActivityFragment extends Fragment {
         @Override
         protected void onPostExecute(List<Artist> result) {
             //takes all nested String arrays and adds them to mArtistAdapter
-            if (result != null) {
+            if (result != null && !result.isEmpty()) {
+                mArtistAdapter.clear();
                 for (Artist each : result) {
                     mArtistAdapter.add(each);
                 }
+            } else {
+                Toast toast = Toast.makeText(getActivity()
+                                .getApplicationContext(),
+                        "No results.\n" +
+                                "Try using fewer letters\n" +
+                                "or search for another artist.",
+                        Toast.LENGTH_LONG);
+                toast.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
+                toast.show();
+
             }
         }
     }

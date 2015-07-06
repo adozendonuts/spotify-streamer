@@ -36,7 +36,6 @@ public class ArtistTracksFragment extends Fragment {
     private String mArtistId;
     private TracksAdapter tracksAdapter;
     private List<Track> mTracks = new ArrayList<>();
-    final String LOG_TAG = "ARTIST TRACKS LOGGING";
 
     public ArtistTracksFragment() {
     }
@@ -78,7 +77,7 @@ public class ArtistTracksFragment extends Fragment {
                 } catch (Exception e) {
                     e.printStackTrace();
                     url = "";
-                    Log.v(LOG_TAG, "what the hell caused THIS?: " + e);
+                    Log.v("ARTIST TRACKS LOGGING", "what the hell caused THIS?: " + e);
                 }
 
                 Picasso.with(getContext()).load(url).into(albumImageView);
@@ -88,7 +87,6 @@ public class ArtistTracksFragment extends Fragment {
             return rowView;
         }
     }
-
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -120,7 +118,6 @@ public class ArtistTracksFragment extends Fragment {
             Map<String, Object> options = new HashMap<>();
             options.put("country", Locale.getDefault().getCountry());
             Tracks artistTopTracks = spotify.getArtistTopTrack(mArtistId, options);
-            Log.v(LOG_TAG, "here are the tracks " + artistTopTracks);
 
             return artistTopTracks;
         }
@@ -134,8 +131,7 @@ public class ArtistTracksFragment extends Fragment {
                     tracksAdapter.add(each);
                 }
             }
-            Log.v(LOG_TAG, "here are the results" + result.tracks);
-            Log.v(LOG_TAG, "Adapter's NEW SIZE = : " + tracksAdapter.getCount());
+
         }
     }
 }
