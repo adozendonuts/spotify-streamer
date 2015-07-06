@@ -49,12 +49,6 @@ public class MainActivityFragment extends Fragment {
             this.items = items;
         }
 
-        //TODO holder
-        private class ArtistResult {
-            ImageView thumb;
-            TextView name;
-        }
-
         //override getView method
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
@@ -80,16 +74,17 @@ public class MainActivityFragment extends Fragment {
                     url = thumbnailList.get(lastOne).url;
                     Picasso.with(getContext()).load(url).into(thumbnailView);
                 } else {
-                    thumbnailView.setImageResource(R.drawable.eigth_notes);
+                    url = "";
+                    Picasso.with(getContext()).load(R.drawable.eigth_notes).into(thumbnailView);
                     Log.v("ARTISTADAPTER", "Why is it choosing this as the picture?");
                 }
             } catch (Exception e) {
+                url = "";
                 e.printStackTrace();
                 Log.v("ARTISTADAPTER", "what the hell caused THIS?: " + e);
             }
 
             artistNameView.setText(artistName);
-            thumbnailView.setImageResource(R.drawable.eigth_notes);
             return rowView;
         }
     }

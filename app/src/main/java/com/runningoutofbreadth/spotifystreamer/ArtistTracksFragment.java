@@ -71,15 +71,17 @@ public class ArtistTracksFragment extends Fragment {
                     if (albumImages.size() > 0) {
                         lastOne = albumImages.size() - 1;
                         url = albumImages.get(lastOne).url;
-                        Picasso.with(getContext()).load(url).into(albumImageView);
                     } else {
+                        url = "";
                         albumImageView.setImageResource(R.drawable.eigth_notes);
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
+                    url = "";
                     Log.v(LOG_TAG, "what the hell caused THIS?: " + e);
                 }
 
+                Picasso.with(getContext()).load(url).into(albumImageView);
                 trackTitleView.setText(trackTitle);
                 albumTitleView.setText(album);
             }
