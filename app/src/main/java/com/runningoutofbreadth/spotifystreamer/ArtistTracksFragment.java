@@ -40,7 +40,7 @@ public class ArtistTracksFragment extends Fragment {
     public ArtistTracksFragment() {
     }
 
-    public class TracksAdapter extends ArrayAdapter {
+    public class TracksAdapter extends ArrayAdapter<Track> {
         private List<Track> tracks;
 
         public TracksAdapter(Context context, int resource, List<Track> tracks) {

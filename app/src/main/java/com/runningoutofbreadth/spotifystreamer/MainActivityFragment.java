@@ -42,7 +42,7 @@ public class MainActivityFragment extends Fragment {
     public MainActivityFragment() {
     }
 
-    public class ArtistAdapter extends ArrayAdapter {
+    public class ArtistAdapter extends ArrayAdapter<Artist> {
         List<Artist> items;
 
         //constructor.
@@ -76,12 +76,9 @@ public class MainActivityFragment extends Fragment {
                     url = thumbnailList.get(lastOne).url;
                     Picasso.with(getContext()).load(url).into(thumbnailView);
                 } else {
-                    url = "";
                     Picasso.with(getContext()).load(R.drawable.eigth_notes).into(thumbnailView);
-                    Log.v("ARTISTADAPTER", "Why is it choosing this as the picture?");
                 }
             } catch (Exception e) {
-                url = "";
                 e.printStackTrace();
                 Log.v("ARTISTADAPTER", "what the hell caused THIS?: " + e);
             }
