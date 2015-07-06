@@ -26,26 +26,27 @@ import kaaes.spotify.webapi.android.SpotifyApi;
 import kaaes.spotify.webapi.android.SpotifyService;
 import kaaes.spotify.webapi.android.models.Artist;
 import kaaes.spotify.webapi.android.models.ArtistsPager;
+import kaaes.spotify.webapi.android.models.Image;
 
 
 /**
  * A placeholder fragment containing a simple view.
  */
 public class MainActivityFragment extends Fragment {
-    //TODO make mNames, mThumbUrls, mArtistIDs part of a class (maybe)
-    private CustomAdapter mArtistAdapter;
+    private ArtistAdapter mArtistAdapter;
     private String search;
-    private List<String> mNames = new ArrayList<>();
-    private List<String> mThumbUrls = new ArrayList<>();
-    private List<String> mArtistIds = new ArrayList<>();
+    private List<Artist> mArtists = new ArrayList<Artist>();
 
     public MainActivityFragment() {
     }
 
-    public class CustomAdapter extends ArrayAdapter {
+    public class ArtistAdapter extends ArrayAdapter {
+        List<Artist> items;
+
         //constructor.
-        public CustomAdapter(Context context, int resource, List<String> items) {
+        public ArtistAdapter(Context context, int resource, List<Artist> items) {
             super(context, resource, items);
+            this.items = items;
         }
 
         //TODO holder
@@ -65,16 +66,30 @@ public class MainActivityFragment extends Fragment {
                 rowView = inflater.inflate(R.layout.individual_artist, parent, false);
             }
 
-            TextView name = (TextView) rowView.findViewById(R.id.artist_name_text_view);
-            ImageView thumbnail = (ImageView) rowView.findViewById(R.id.artist_thumbnail_image_view);
+            String artistName = items.get(position).name;
+            List<Image> thumbnailList = items.get(position).images;
+            int lastOne = 0;
+            String url;
 
-            name.setText(mNames.get(position));
-            if (!mThumbUrls.get(position).isEmpty()) {
-                Picasso.with(getContext()).load(mThumbUrls.get(position)).into(thumbnail);
-            } else {
-                //if no images (no url), use default picture
-                thumbnail.setImageResource(R.drawable.eigth_notes);
+            TextView artistNameView = (TextView) rowView.findViewById(R.id.artist_name_text_view);
+            ImageView thumbnailView = (ImageView) rowView.findViewById(R.id.artist_thumbnail_image_view);
+
+            try {
+                if (thumbnailList.size() > 0) {
+                    lastOne = thumbnailList.size() - 2;
+                    url = thumbnailList.get(lastOne).url;
+                    Picasso.with(getContext()).load(url).into(thumbnailView);
+                } else {
+                    thumbnailView.setImageResource(R.drawable.eigth_notes);
+                    Log.v("ARTISTADAPTER", "Why is it choosing this as the picture?");
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                Log.v("ARTISTADAPTER", "what the hell caused THIS?: " + e);
             }
+
+            artistNameView.setText(artistName);
+            thumbnailView.setImageResource(R.drawable.eigth_notes);
             return rowView;
         }
     }
@@ -89,17 +104,14 @@ public class MainActivityFragment extends Fragment {
         //search field on top of screen, made so that hitting Next runs search
         final EditText editText = (EditText) rootView.findViewById(R.id.search_edit_text);
 
-        //create empty nested string arrays to hold each list view item (artist name and pic)
-        String[] results = new String[mNames.size()];
-        mNames.toArray(results);
-        mArtistAdapter = new CustomAdapter(getActivity(), R.layout.individual_artist, mNames);
+        mArtistAdapter = new ArtistAdapter(getActivity(), R.layout.individual_artist, mArtists);
 
         //onClick, open up new activity
         final ListView list = (ListView) rootView.findViewById(R.id.artist_list_view);
         list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                String artistId = mArtistIds.get(position);
+                String artistId = mArtists.get(position).id;
                 Intent intent = new Intent(getActivity(), ArtistTracks.class)
                         .putExtra(Intent.EXTRA_TEXT, artistId);
                 startActivity(intent);
@@ -128,91 +140,27 @@ public class MainActivityFragment extends Fragment {
         return rootView;
     }
 
-    public class FetchArtistData extends AsyncTask<String, Void, String[][]> {
+    public class FetchArtistData extends AsyncTask<String, Void, List<Artist>> {
         private final String LOG_TAG = FetchArtistData.class.getSimpleName();
 
-        protected String[][] doInBackground(String... params) {
+        protected List<Artist> doInBackground(String... params) {
 
             SpotifyApi api = new SpotifyApi();
             SpotifyService spotify = api.getService();
             ArtistsPager artistsPager = spotify.searchArtists(search);
-            List<Artist> artistNameListItems = new ArrayList<Artist>(artistsPager.artists.items);
 
-            // see how many artistResults are returned. expected 20
-            int size = artistNameListItems.size();
-            String[][] artistListString = new String[size][2];
-//            Log.v(LOG_TAG, size + " ITEMS: " + artistNameListItems.toString());
-
-            try {
-
-                //get smallest picture by accessing last item in images array
-                String individualArtistName;
-                String thumbnailUrl;
-                String artistId;
-
-                for (Artist each : artistNameListItems) {
-                    int currentIndex = artistNameListItems.indexOf(each);
-
-                    //images. if many images, get 2nd to smallest. else, get smallest
-                    int lastOne;
-                    int imageListSize = each.images.size();
-                    if (imageListSize == 0) {
-                        thumbnailUrl = "";
-                    } else {
-                        if (imageListSize > 1) {
-                            lastOne = imageListSize - 2;
-                        } else {
-                            lastOne = imageListSize - 1;
-                        }
-                        thumbnailUrl = each.images.get(lastOne).url;
-                    }
-
-                    //Artist mNames and mArtistIds;
-                    individualArtistName = each.name;
-                    artistId = each.id;
-
-
-                    //convert mNames and images into a string array
-                    String[] nameThumbId = {thumbnailUrl, individualArtistName, artistId};
-
-                    //append list to results with results.add()
-                    artistListString[currentIndex] = nameThumbId;
-                }
-            } catch (Exception e) {
-                Log.e(LOG_TAG, "what happened?" + e);
-                return null;
-            }
-
-            try {
-                return artistListString;
-            } catch (Exception e) {
-                //no results? oh well
-                Log.e(LOG_TAG, "No results for query", e);
-                e.printStackTrace();
-            }
-            return null;
+            return artistsPager.artists.items;
         }
 
         @Override
-        protected void onPostExecute(String[][] result) {
+        protected void onPostExecute(List<Artist> result) {
             //takes all nested String arrays and adds them to mArtistAdapter
             if (result != null) {
-                mNames.clear();
-                mThumbUrls.clear();
-                for (String[] each : result) {
-                    String url = each[0];
-                    String artistName = each[1];
-                    String artistId = each[2];
-                    mThumbUrls.add(url);
-                    mNames.add(artistName);
-                    mArtistIds.add(artistId);
-//                    Log.v(LOG_TAG, "this is the names entry:  " + artistName);
-//                    Log.v(LOG_TAG, "this is the url entry:  " + url);
-//                    Log.v(LOG_TAG, "this is the id entry:  " + artistId);
+                for (Artist each : result) {
+                    mArtistAdapter.add(each);
                 }
             }
         }
     }
-
 }
 

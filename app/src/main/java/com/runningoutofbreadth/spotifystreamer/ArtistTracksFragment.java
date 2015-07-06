@@ -77,13 +77,11 @@ public class ArtistTracksFragment extends Fragment {
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
-                    Log.v(LOG_TAG, "No pictures, it seems." + e);
+                    Log.v(LOG_TAG, "what the hell caused THIS?: " + e);
                 }
-
 
                 trackTitleView.setText(trackTitle);
                 albumTitleView.setText(album);
-
             }
             return rowView;
         }
