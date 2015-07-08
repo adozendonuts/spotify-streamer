@@ -4,7 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
+import android.app.Fragment;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.KeyEvent;
@@ -34,12 +34,29 @@ import kaaes.spotify.webapi.android.models.Image;
 /**
  * A placeholder fragment containing a simple view.
  */
-public class MainActivityFragment extends Fragment {
+public class SearchFragment extends Fragment {
     private ArtistAdapter mArtistAdapter;
     private String search;
     private List<Artist> mArtists = new ArrayList<Artist>();
+    private List<String> urls;
 
-    public MainActivityFragment() {
+    public SearchFragment() {
+    }
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setRetainInstance(true);
+    }
+
+    public void setData(List<String> urlData) {
+        this.urls = urlData;
+    }
+
+    ;
+
+    public List<String> getData() {
+        return urls;
     }
 
     public class ArtistAdapter extends ArrayAdapter<Artist> {
@@ -75,6 +92,7 @@ public class MainActivityFragment extends Fragment {
                     lastOne = thumbnailList.size() - 2;
                     url = thumbnailList.get(lastOne).url;
                     Picasso.with(getContext()).load(url).into(thumbnailView);
+                    urls.add(url);
                 } else {
                     Picasso.with(getContext()).load(R.drawable.eigth_notes).into(thumbnailView);
                 }
@@ -86,6 +104,13 @@ public class MainActivityFragment extends Fragment {
             artistNameView.setText(artistName);
             return rowView;
         }
+    }
+
+
+    @Override
+    public void onSaveInstanceState(Bundle savedInstanceState) {
+        savedInstanceState.getString(search);
+        super.onSaveInstanceState(savedInstanceState);
     }
 
     @Override

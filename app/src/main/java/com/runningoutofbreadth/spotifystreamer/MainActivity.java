@@ -1,17 +1,27 @@
 package com.runningoutofbreadth.spotifystreamer;
 
-import android.support.v7.app.ActionBarActivity;
+import android.app.Activity;
+import android.app.FragmentManager;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 
 
-public class MainActivity extends ActionBarActivity {
+public class MainActivity extends Activity {
+
+    private SearchFragment searchFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        FragmentManager fm = getFragmentManager();
+        searchFragment = (SearchFragment) fm.findFragmentByTag("urls");
+        if (searchFragment == null) {
+            searchFragment = new SearchFragment();
+            fm.beginTransaction().add(searchFragment, "urls").commit();
+        }
     }
 
 
