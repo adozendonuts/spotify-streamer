@@ -1,20 +1,26 @@
 package com.runningoutofbreadth.spotifystreamer;
 
-import android.support.v7.app.ActionBarActivity;
+import android.app.FragmentManager;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 
 
-public class ArtistTracks extends ActionBarActivity {
+public class ArtistTracks extends AppCompatActivity {
+
+    private ArtistTracksFragment artTraFra;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_artist_tracks);
-        if (savedInstanceState != null) {
-            getSupportFragmentManager().beginTransaction()
-                    .add(R.id.top_tracks_fragment, new ArtistTracksFragment()).commit();
+
+        FragmentManager fm = getFragmentManager();
+        artTraFra = (ArtistTracksFragment) fm.findFragmentById(R.id.top_tracks_fragment);
+        if (artTraFra == null) {
+            artTraFra = new ArtistTracksFragment();
+            fm.beginTransaction().add(artTraFra, "mTracks").commit();
         }
     }
 

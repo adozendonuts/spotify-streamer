@@ -1,16 +1,18 @@
 package com.runningoutofbreadth.spotifystreamer;
 
+import android.app.Fragment;
 import android.content.Context;
 import android.content.Intent;
+import android.net.ConnectivityManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.app.Fragment;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
@@ -40,6 +42,7 @@ public class SearchFragment extends Fragment {
     private List<Artist> mArtists = new ArrayList<Artist>();
     private List<String> urls;
 
+
     public SearchFragment() {
     }
 
@@ -52,8 +55,6 @@ public class SearchFragment extends Fragment {
     public void setData(List<String> urlData) {
         this.urls = urlData;
     }
-
-    ;
 
     public List<String> getData() {
         return urls;
@@ -142,12 +143,29 @@ public class SearchFragment extends Fragment {
                 v = editText;
                 search = v.getText().toString();
 
-                //starts up Spotify built-in http connection, returns goodies
+                //runs once Done is pressed.
                 if (!search.isEmpty()) {
-                    FetchArtistData fetchArtistData = new FetchArtistData();
-                    fetchArtistData.execute(search);
+                    //check for internet connection
+                    ConnectivityManager cm = (ConnectivityManager) getActivity()
+                            .getSystemService(Context.CONNECTIVITY_SERVICE);
+
+                    if (cm.getActiveNetworkInfo() == null) {
+                        Toast toast = Toast.makeText(getActivity().getApplicationContext(),
+                                "No internet!", Toast.LENGTH_SHORT);
+                        toast.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
+                        toast.show();
+                    } else {
+                        //make keyboard disappear if search goes through
+                        InputMethodManager inputManager = (InputMethodManager) getActivity()
+                                .getSystemService(Context.INPUT_METHOD_SERVICE);
+                        inputManager.toggleSoftInput(0, 0);
+
+                        FetchArtistData fetchArtistData = new FetchArtistData();
+                        fetchArtistData.execute(search);
+                        list.setSelectionAfterHeaderView();
+                    }
+
                 }
-                //TODO make keyboard disappear after search
                 return true;
             }
         });
