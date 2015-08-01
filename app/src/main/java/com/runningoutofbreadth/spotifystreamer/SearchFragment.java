@@ -52,14 +52,6 @@ public class SearchFragment extends Fragment {
         setRetainInstance(true);
     }
 
-    public void setData(List<String> urlData) {
-        this.urls = urlData;
-    }
-
-    public List<String> getData() {
-        return urls;
-    }
-
     public class ArtistAdapter extends ArrayAdapter<Artist> {
         List<Artist> items;
 
