@@ -9,6 +9,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
@@ -59,7 +60,7 @@ public class ArtistTracksFragment extends Fragment {
                 String trackTitle = tracks.get(position).name;
                 String album = tracks.get(position).album.name;
                 List<Image> albumImages = tracks.get(position).album.images;
-                int lastOne = 0;
+                int lastOne;
                 String url;
 
                 TextView trackTitleView = (TextView) rowView.findViewById(R.id.track_title_text_view);
@@ -108,6 +109,16 @@ public class ArtistTracksFragment extends Fragment {
         tracksAdapter = new TracksAdapter(rootView.getContext(), R.layout.individual_track, mTracks);
 
         ListView list = (ListView) rootView.findViewById(R.id.track_list_view);
+        list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                String trackPreviewUrl = mTracks.get(position).preview_url;
+                Intent intent = new Intent(getActivity(), TrackPlayer.class)
+                        .putExtra(Intent.EXTRA_TEXT, trackPreviewUrl);
+                startActivity(intent);
+            }
+        });
+
         FetchTracks fetchTracks = new FetchTracks();
         fetchTracks.execute(mArtistId);
 
@@ -123,9 +134,8 @@ public class ArtistTracksFragment extends Fragment {
             SpotifyService spotify = api.getService();
             Map<String, Object> options = new HashMap<>();
             options.put("country", Locale.getDefault().getCountry());
-            Tracks artistTopTracks = spotify.getArtistTopTrack(mArtistId, options);
 
-            return artistTopTracks;
+            return spotify.getArtistTopTrack(mArtistId, options);
         }
 
         @Override
