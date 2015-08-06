@@ -123,8 +123,10 @@ public class SearchFragment extends Fragment {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 String artistId = mArtists.get(position).id;
+                String artistName = mArtists.get(position).name;
                 Intent intent = new Intent(getActivity(), ArtistTracks.class)
                         .putExtra(Intent.EXTRA_TEXT, artistId);
+                intent.putExtra("Artist", artistName);
                 startActivity(intent);
             }
         });

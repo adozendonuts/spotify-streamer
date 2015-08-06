@@ -1,10 +1,10 @@
 package com.runningoutofbreadth.spotifystreamer;
 
+import android.app.Fragment;
 import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -35,6 +35,7 @@ import kaaes.spotify.webapi.android.models.Tracks;
  */
 public class ArtistTracksFragment extends Fragment {
     private String mArtistId;
+    private String artistName;
     private TracksAdapter tracksAdapter;
     private List<Track> mTracks = new ArrayList<>();
 
@@ -104,6 +105,8 @@ public class ArtistTracksFragment extends Fragment {
 
         if (intent != null && intent.hasExtra(Intent.EXTRA_TEXT)) {
             mArtistId = intent.getStringExtra(Intent.EXTRA_TEXT);
+            artistName = intent.getStringExtra("Artist");
+
         }
 
         tracksAdapter = new TracksAdapter(rootView.getContext(), R.layout.individual_track, mTracks);
@@ -113,8 +116,13 @@ public class ArtistTracksFragment extends Fragment {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 String trackPreviewUrl = mTracks.get(position).preview_url;
+                String trackAlbum = mTracks.get(position).album.name;
+                String trackName = mTracks.get(position).name;
                 Intent intent = new Intent(getActivity(), TrackPlayer.class)
-                        .putExtra(Intent.EXTRA_TEXT, trackPreviewUrl);
+                        .putExtra("URL", trackPreviewUrl);
+                intent.putExtra("Artist", artistName);
+                intent.putExtra("Album", trackAlbum);
+                intent.putExtra("Track", trackName);
                 startActivity(intent);
             }
         });
