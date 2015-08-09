@@ -35,4 +35,5 @@ public class TrackPlayer extends AppCompatActivity {
 
         return super.onOptionsItemSelected(item);
     }
+
 }

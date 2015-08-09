@@ -1,6 +1,8 @@
 package com.runningoutofbreadth.spotifystreamer;
 
 import android.content.Intent;
+import android.media.AudioManager;
+import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.util.Log;
@@ -8,8 +10,11 @@ import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import java.io.IOException;
 
 /**
  * A placeholder fragment containing a simple view.
@@ -19,6 +24,7 @@ public class TrackPlayerFragment extends Fragment {
     private String trackArtist;
     private String trackAlbum;
     private String trackName;
+    MediaPlayer mediaPlayer = new MediaPlayer();
 
     public TrackPlayerFragment() {
     }
@@ -39,10 +45,10 @@ public class TrackPlayerFragment extends Fragment {
 
         try {
             Toast toast = Toast.makeText(getActivity().getApplicationContext(),
-                        trackPreviewUrl + "\n"
-                        + trackArtist + "\n"
-                        + trackAlbum + "\n"
-                        + trackName + "\n"
+                    trackPreviewUrl + "\n"
+                            + trackArtist + "\n"
+                            + trackAlbum + "\n"
+                            + trackName + "\n"
                     , Toast.LENGTH_LONG);
             toast.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
             toast.show();
@@ -59,6 +65,40 @@ public class TrackPlayerFragment extends Fragment {
         albumTextView.setText(trackAlbum);
         trackTextView.setText(trackName);
 
+        mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+        try {
+            mediaPlayer.setDataSource(trackPreviewUrl);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        mediaPlayer.prepareAsync();
+
+        Button playButton = (Button) rootView.findViewById(R.id.player_play_pause_button);
+        playButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mediaPlayer.isPlaying()) {
+                    mediaPlayer.pause();
+                    Log.v("PLAY BUTTON PRESSED", "hopefully it is pausing" + trackPreviewUrl);
+                } else {
+                    mediaPlayer.start();
+                    Log.v("PLAY BUTTON PRESSED", "hopefully it is playing" + trackPreviewUrl);
+                }
+            }
+        });
+
         return rootView;
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        if (mediaPlayer != null) {
+            if (mediaPlayer.isPlaying()) {
+                mediaPlayer.stop();
+            }
+            mediaPlayer.release();
+            mediaPlayer = null;
+        }
     }
 }
