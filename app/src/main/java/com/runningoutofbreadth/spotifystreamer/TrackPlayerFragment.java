@@ -11,8 +11,11 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.squareup.picasso.Picasso;
 
 import java.io.IOException;
 
@@ -23,6 +26,7 @@ public class TrackPlayerFragment extends Fragment {
     private String trackPreviewUrl;
     private String trackArtist;
     private String trackAlbum;
+    private String trackAlbumCover;
     private String trackName;
     MediaPlayer mediaPlayer = new MediaPlayer();
 
@@ -41,6 +45,7 @@ public class TrackPlayerFragment extends Fragment {
             trackArtist = intent.getStringExtra("Artist");
             trackAlbum = intent.getStringExtra("Album");
             trackName = intent.getStringExtra("Track");
+            trackAlbumCover = intent.getStringExtra("Cover");
         }
 
         try {
@@ -58,11 +63,14 @@ public class TrackPlayerFragment extends Fragment {
 
         TextView artistTextView = (TextView) rootView.findViewById(R.id.player_artist_name);
         TextView albumTextView = (TextView) rootView.findViewById(R.id.player_album_name);
+        ImageView albumImageView = (ImageView) rootView.findViewById(R.id.player_album_cover);
         TextView trackTextView = (TextView) rootView.findViewById(R.id.player_track_name);
+
 
 
         artistTextView.setText(trackArtist);
         albumTextView.setText(trackAlbum);
+        Picasso.with(getActivity().getApplicationContext()).load(trackAlbumCover).into(albumImageView);
         trackTextView.setText(trackName);
 
         mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
@@ -72,6 +80,7 @@ public class TrackPlayerFragment extends Fragment {
             e.printStackTrace();
         }
         mediaPlayer.prepareAsync();
+
 
         Button playButton = (Button) rootView.findViewById(R.id.player_play_pause_button);
         playButton.setOnClickListener(new View.OnClickListener() {

@@ -31,7 +31,7 @@ import kaaes.spotify.webapi.android.models.Tracks;
 
 
 /**
- * A placeholder fragment containing a simple view.
+ * Top Ten Tracks
  */
 public class ArtistTracksFragment extends Fragment {
     private String mArtistId;
@@ -118,11 +118,14 @@ public class ArtistTracksFragment extends Fragment {
                 String trackPreviewUrl = mTracks.get(position).preview_url;
                 String trackAlbum = mTracks.get(position).album.name;
                 String trackName = mTracks.get(position).name;
+                String trackAlbumCover = mTracks.get(position).album.images.get(1).url;
+
                 Intent intent = new Intent(getActivity(), TrackPlayer.class)
                         .putExtra("URL", trackPreviewUrl);
                 intent.putExtra("Artist", artistName);
                 intent.putExtra("Album", trackAlbum);
                 intent.putExtra("Track", trackName);
+                intent.putExtra("Cover", trackAlbumCover);
                 startActivity(intent);
             }
         });
