@@ -21,7 +21,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".ArtistTracks"
+            android:name=".TopTenTracksActivity"
             android:label="@string/title_activity_artist_tracks"
             android:parentActivityName=".MainActivity" >
             <meta-data
@@ -29,7 +29,7 @@
                 android:value="com.runningoutofbreadth.spotifystreamer.MainActivity" />
         </activity>
         <activity
-            android:name=".TrackPlayer"
+            android:name=".TrackPlayerActivity"
             android:label="@string/title_activity_track_player" >
         </activity>
     </application>

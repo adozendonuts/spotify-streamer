@@ -38,7 +38,7 @@ public class TrackPlayerFragment extends Fragment {
                              Bundle savedInstanceState) {
 
         Intent intent = getActivity().getIntent();
-        final View rootView = inflater.inflate(R.layout.fragment_track_player, container, false);
+        final View rootView = inflater.inflate(R.layout.fragment_player, container, false);
 
         if (intent != null && intent.hasExtra("URL")) {
             trackPreviewUrl = intent.getStringExtra("URL");

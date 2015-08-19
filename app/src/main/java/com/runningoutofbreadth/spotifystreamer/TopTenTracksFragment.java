@@ -1,6 +1,6 @@
 package com.runningoutofbreadth.spotifystreamer;
 
-import android.app.Fragment;
+import android.support.v4.app.Fragment;
 import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
@@ -33,13 +33,15 @@ import kaaes.spotify.webapi.android.models.Tracks;
 /**
  * Top Ten Tracks
  */
-public class ArtistTracksFragment extends Fragment {
+public class TopTenTracksFragment extends Fragment {
     private String mArtistId;
-    private String artistName;
+    private String mArtistName;
+    static final String ARTIST_ID_KEY = "ID";
+    static final String ARTIST_NAME_KEY = "NAME";
     private TracksAdapter tracksAdapter;
     private List<Track> mTracks = new ArrayList<>();
 
-    public ArtistTracksFragment() {
+    public TopTenTracksFragment() {
     }
 
     public class TracksAdapter extends ArrayAdapter<Track> {
@@ -100,13 +102,23 @@ public class ArtistTracksFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
+        Bundle arguments = getArguments();
+        if (arguments != null) {
+            mArtistId = arguments.getString(ARTIST_ID_KEY);
+            mArtistName = arguments.getString(ARTIST_NAME_KEY);
+            Log.v("TOP TEN TRACKS FRAGMENT", mArtistId + " " + mArtistName);
+            FetchTracks fetchTracks = new FetchTracks();
+            fetchTracks.execute(mArtistId);
+        }
+
         Intent intent = getActivity().getIntent();
-        final View rootView = inflater.inflate(R.layout.fragment_artist_tracks, container, false);
+        final View rootView = inflater.inflate(R.layout.fragment_top_tracks, container, false);
 
         if (intent != null && intent.hasExtra(Intent.EXTRA_TEXT)) {
             mArtistId = intent.getStringExtra(Intent.EXTRA_TEXT);
-            artistName = intent.getStringExtra("Artist");
-
+            mArtistName = intent.getStringExtra("Artist");
+            FetchTracks fetchTracks = new FetchTracks();
+            fetchTracks.execute(mArtistId);
         }
 
         tracksAdapter = new TracksAdapter(rootView.getContext(), R.layout.individual_track, mTracks);
@@ -120,18 +132,15 @@ public class ArtistTracksFragment extends Fragment {
                 String trackName = mTracks.get(position).name;
                 String trackAlbumCover = mTracks.get(position).album.images.get(1).url;
 
-                Intent intent = new Intent(getActivity(), TrackPlayer.class)
+                Intent intent = new Intent(getActivity(), TrackPlayerActivity.class)
                         .putExtra("URL", trackPreviewUrl);
-                intent.putExtra("Artist", artistName);
+                intent.putExtra("Artist", mArtistName);
                 intent.putExtra("Album", trackAlbum);
                 intent.putExtra("Track", trackName);
                 intent.putExtra("Cover", trackAlbumCover);
                 startActivity(intent);
             }
         });
-
-        FetchTracks fetchTracks = new FetchTracks();
-        fetchTracks.execute(mArtistId);
 
         list.setAdapter(tracksAdapter);
         return rootView;
@@ -146,17 +155,27 @@ public class ArtistTracksFragment extends Fragment {
             Map<String, Object> options = new HashMap<>();
             options.put("country", Locale.getDefault().getCountry());
 
-            return spotify.getArtistTopTrack(mArtistId, options);
+            try {
+                Log.v(LOG_TAG, spotify.getArtistTopTrack(mArtistId, options).tracks.toString());
+                return spotify.getArtistTopTrack(mArtistId, options);
+            } catch (NullPointerException e) {
+                Log.v(LOG_TAG, mArtistId + "is what is returned.");
+                return null;
+            }
         }
 
         @Override
         public void onPostExecute(Tracks result) {
-            Log.v(LOG_TAG, "M TRACKS SIZE = : " + tracksAdapter.getCount());
+            Log.v(LOG_TAG, "M TRACKS SIZE = " + tracksAdapter.getCount());
+            Log.v(LOG_TAG, "Result = " + result);
+
             tracksAdapter.clear();
             if (result.tracks != null) {
                 for (Track each : result.tracks) {
                     tracksAdapter.add(each);
                 }
+            } else {
+                Log.v(LOG_TAG, result.tracks.toString());
             }
 
         }

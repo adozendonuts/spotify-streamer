@@ -1,23 +1,33 @@
 package com.runningoutofbreadth.spotifystreamer;
 
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 
-public class TrackPlayer extends AppCompatActivity {
+
+public class TopTenTracksActivity extends AppCompatActivity {
+
+    private TopTenTracksFragment artTraFra;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_track_player);
+        setContentView(R.layout.activity_top_tracks);
+
+//        FragmentManager fm = getFragmentManager();
+//        artTraFra = (TopTenTracksFragment) fm.findFragmentById(R.id.fragment_top_tracks);
+//        if (artTraFra == null) {
+//            artTraFra = new TopTenTracksFragment();
+//            fm.beginTransaction().add(artTraFra, "mTracks").commit();
+//        }
     }
 
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_track_player, menu);
+        getMenuInflater().inflate(R.menu.menu_artist_tracks, menu);
         return true;
     }
 
@@ -35,5 +45,4 @@ public class TrackPlayer extends AppCompatActivity {
 
         return super.onOptionsItemSelected(item);
     }
-
 }

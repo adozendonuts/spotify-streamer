@@ -1,8 +1,8 @@
 package com.runningoutofbreadth.spotifystreamer;
 
-import android.app.Fragment;
+import android.app.Activity;
+import android.support.v4.app.Fragment;
 import android.content.Context;
-import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -38,12 +38,28 @@ import kaaes.spotify.webapi.android.models.Image;
  */
 public class SearchFragment extends Fragment {
     private ArtistAdapter mArtistAdapter;
+    TopTenTracksCallback mTopTenTracksCallback;
     private String search;
     private List<Artist> mArtists = new ArrayList<Artist>();
-    private List<String> urls;
-
 
     public SearchFragment() {
+    }
+
+    public interface TopTenTracksCallback {
+        /**
+         * DetailFragmentCallback for when an item has been selected.
+         */
+        public void onItemSelected(String artistId, String artistName);
+    }
+
+    @Override
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+        try {
+            mTopTenTracksCallback = (TopTenTracksCallback) activity;
+        } catch (ClassCastException e) {
+            throw new ClassCastException(activity.toString() + " must implement onItemSelected");
+        }
     }
 
     @Override
@@ -85,7 +101,6 @@ public class SearchFragment extends Fragment {
                     lastOne = thumbnailList.size() - 2;
                     url = thumbnailList.get(lastOne).url;
                     Picasso.with(getContext()).load(url).into(thumbnailView);
-                    urls.add(url);
                 } else {
                     Picasso.with(getContext()).load(R.drawable.eigth_notes).into(thumbnailView);
                 }
@@ -110,24 +125,21 @@ public class SearchFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
-        final View rootView = inflater.inflate(R.layout.fragment_search_artists, container, false);
+        final View rootView = inflater.inflate(R.layout.fragment_search, container, false);
 
         //search field on top of screen, made so that hitting Next runs search
         final EditText editText = (EditText) rootView.findViewById(R.id.search_edit_text);
 
         mArtistAdapter = new ArtistAdapter(getActivity(), R.layout.individual_artist, mArtists);
 
-        //instantiate listview. onClick, open up new activity
+        //instantiate listview. onClick, talk to MainActivity
         final ListView list = (ListView) rootView.findViewById(R.id.artist_list_view);
         list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 String artistId = mArtists.get(position).id;
                 String artistName = mArtists.get(position).name;
-                Intent intent = new Intent(getActivity(), ArtistTracks.class)
-                        .putExtra(Intent.EXTRA_TEXT, artistId);
-                intent.putExtra("Artist", artistName);
-                startActivity(intent);
+                ((TopTenTracksCallback) getActivity()).onItemSelected(artistId, artistName);
             }
         });
 
