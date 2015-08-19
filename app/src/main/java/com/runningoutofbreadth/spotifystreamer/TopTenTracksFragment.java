@@ -1,10 +1,11 @@
 package com.runningoutofbreadth.spotifystreamer;
 
-import android.support.v4.app.Fragment;
 import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -34,10 +35,13 @@ import kaaes.spotify.webapi.android.models.Tracks;
  * Top Ten Tracks
  */
 public class TopTenTracksFragment extends Fragment {
+    String PLAYERFRAGMENT_TAG = "TFTAG";
     private String mArtistId;
     private String mArtistName;
     static final String ARTIST_ID_KEY = "ID";
     static final String ARTIST_NAME_KEY = "NAME";
+    static final String PANE_KEY = "PANES";
+    boolean mTwoPane;
     private TracksAdapter tracksAdapter;
     private List<Track> mTracks = new ArrayList<>();
 
@@ -106,20 +110,21 @@ public class TopTenTracksFragment extends Fragment {
         if (arguments != null) {
             mArtistId = arguments.getString(ARTIST_ID_KEY);
             mArtistName = arguments.getString(ARTIST_NAME_KEY);
+            mTwoPane = arguments.getBoolean(PANE_KEY);
             Log.v("TOP TEN TRACKS FRAGMENT", mArtistId + " " + mArtistName);
             FetchTracks fetchTracks = new FetchTracks();
             fetchTracks.execute(mArtistId);
         }
-
         Intent intent = getActivity().getIntent();
-        final View rootView = inflater.inflate(R.layout.fragment_top_tracks, container, false);
-
-        if (intent != null && intent.hasExtra(Intent.EXTRA_TEXT)) {
-            mArtistId = intent.getStringExtra(Intent.EXTRA_TEXT);
-            mArtistName = intent.getStringExtra("Artist");
+        if (intent != null && intent.hasExtra(ARTIST_ID_KEY)){
+            mArtistId = intent.getStringExtra(ARTIST_ID_KEY);
+            mArtistName = intent.getStringExtra(ARTIST_NAME_KEY);
+            Log.v("TOP TEN", mArtistId + mArtistName );
             FetchTracks fetchTracks = new FetchTracks();
             fetchTracks.execute(mArtistId);
         }
+
+        final View rootView = inflater.inflate(R.layout.fragment_top_tracks, container, false);
 
         tracksAdapter = new TracksAdapter(rootView.getContext(), R.layout.individual_track, mTracks);
 
@@ -132,13 +137,19 @@ public class TopTenTracksFragment extends Fragment {
                 String trackName = mTracks.get(position).name;
                 String trackAlbumCover = mTracks.get(position).album.images.get(1).url;
 
-                Intent intent = new Intent(getActivity(), TrackPlayerActivity.class)
-                        .putExtra("URL", trackPreviewUrl);
-                intent.putExtra("Artist", mArtistName);
-                intent.putExtra("Album", trackAlbum);
-                intent.putExtra("Track", trackName);
-                intent.putExtra("Cover", trackAlbumCover);
-                startActivity(intent);
+                Bundle args = new Bundle();
+                args.putString(TrackPlayerFragment.ARTIST_NAME_KEY, mArtistName);
+                args.putString(TrackPlayerFragment.TRACK_NAME_KEY, trackName);
+                args.putString(TrackPlayerFragment.PREVIEW_URL_KEY, trackPreviewUrl);
+                args.putString(TrackPlayerFragment.ALBUM_KEY, trackAlbum);
+                args.putString(TrackPlayerFragment.ALBUM_COVER_KEY, trackAlbumCover);
+                args.putBoolean(TrackPlayerFragment.PANES_KEY, mTwoPane);
+
+                TrackPlayerFragment trackPlayerFragment = new TrackPlayerFragment();
+                trackPlayerFragment.setArguments(args);
+
+                FragmentManager fragmentManager = getFragmentManager();
+                trackPlayerFragment.show(fragmentManager, PLAYERFRAGMENT_TAG);
             }
         });
 

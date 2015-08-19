@@ -7,7 +7,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 
 
-public class MainActivity extends AppCompatActivity implements SearchFragment.TopTenTracksCallback {
+public class MainActivity extends AppCompatActivity implements SearchFragment.TopTenTracksCallback{
     String TRACKSFRAGMENT_TAG = "TFTAG";
     boolean mTwoPane;
 
@@ -35,6 +35,7 @@ public class MainActivity extends AppCompatActivity implements SearchFragment.To
             Bundle args = new Bundle();
             args.putString(TopTenTracksFragment.ARTIST_ID_KEY, artistId);
             args.putString(TopTenTracksFragment.ARTIST_NAME_KEY, artistName);
+            args.putBoolean(TopTenTracksFragment.PANE_KEY, mTwoPane);
 
             TopTenTracksFragment topTenTracksFragment = new TopTenTracksFragment();
             topTenTracksFragment.setArguments(args);
@@ -44,8 +45,8 @@ public class MainActivity extends AppCompatActivity implements SearchFragment.To
                     .commit();
         } else {
             Intent intent = new Intent(this, TopTenTracksActivity.class)
-                    .putExtra(Intent.EXTRA_TEXT, artistId);
-            intent.putExtra("Artist", artistName);
+                    .putExtra(TopTenTracksFragment.ARTIST_ID_KEY, artistId);
+            intent.putExtra(TopTenTracksFragment.ARTIST_NAME_KEY, artistName);
             startActivity(intent);
         }
     }

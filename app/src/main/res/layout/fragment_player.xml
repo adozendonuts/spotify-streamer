@@ -1,21 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:padding="16dp"
-    android:weightSum="1">
+    android:weightSum="1"
+    tools:context="com.runningoutofbreadth.spotifystreamer.TrackPlayerFragment">
 
     <!-- layout block for track info-->
     <LinearLayout
-        android:layout_width="fill_parent"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:padding="8dp">
 
         <TextView
             android:id="@+id/player_artist_name"
-            android:layout_width="fill_parent"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center"
             android:padding="8dp"
@@ -23,7 +25,7 @@
 
         <TextView
             android:id="@+id/player_album_name"
-            android:layout_width="fill_parent"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center"
             android:padding="8dp"
@@ -31,15 +33,16 @@
 
         <ImageView
             android:id="@+id/player_album_cover"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center"
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:layout_gravity="center"
             android:scaleType="fitCenter"
             android:src="@mipmap/ic_launcher" />
 
         <TextView
             android:id="@+id/player_track_name"
-            android:layout_width="fill_parent"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center"
             android:padding="8dp"
@@ -48,14 +51,14 @@
 
     <!-- layout block for "scrub" bar-->
     <SeekBar
-        android:layout_width="fill_parent"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:paddingBottom="8dp"
         android:paddingTop="8dp" />
 
     <!-- layout block for start/end times-->
     <LinearLayout
-        android:layout_width="fill_parent"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal">
 
@@ -82,31 +85,37 @@
     </LinearLayout>
 
     <!-- layout block for playback controls -->
-    <LinearLayout
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content">
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_gravity="center_horizontal">
 
         <Button
+            android:padding="8dp"
             android:id="@+id/player_track_previous_button"
-            android:layout_width="0dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
             android:background="@android:drawable/ic_media_previous" />
 
         <Button
+            android:padding="8dp"
             android:id="@+id/player_play_pause_button"
-            android:layout_width="0dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:background="@android:drawable/ic_media_play" />
+            android:background="@android:drawable/ic_media_play"
+            android:layout_toRightOf="@+id/player_track_previous_button"
+            android:layout_toEndOf="@+id/player_track_previous_button"/>
 
         <Button
+            android:padding="8dp"
             android:id="@+id/player_track_next_button"
-            android:layout_width="0dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:background="@android:drawable/ic_media_next" />
+            android:background="@android:drawable/ic_media_next"
+            android:layout_toRightOf="@+id/player_play_pause_button"
+            android:layout_toEndOf="@+id/player_track_previous_button"/>
 
-    </LinearLayout>
+    </RelativeLayout>
 
 </LinearLayout>

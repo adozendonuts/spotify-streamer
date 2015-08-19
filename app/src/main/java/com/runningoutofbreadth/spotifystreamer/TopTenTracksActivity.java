@@ -6,23 +6,13 @@ import android.view.Menu;
 import android.view.MenuItem;
 
 
-public class TopTenTracksActivity extends AppCompatActivity {
-
-    private TopTenTracksFragment artTraFra;
+public class TopTenTracksActivity extends AppCompatActivity{
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_top_tracks);
-
-//        FragmentManager fm = getFragmentManager();
-//        artTraFra = (TopTenTracksFragment) fm.findFragmentById(R.id.fragment_top_tracks);
-//        if (artTraFra == null) {
-//            artTraFra = new TopTenTracksFragment();
-//            fm.beginTransaction().add(artTraFra, "mTracks").commit();
-//        }
     }
-
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
