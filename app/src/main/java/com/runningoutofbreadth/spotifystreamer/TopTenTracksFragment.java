@@ -19,10 +19,8 @@ import android.widget.TextView;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 
 import kaaes.spotify.webapi.android.SpotifyApi;
 import kaaes.spotify.webapi.android.SpotifyService;
@@ -44,6 +42,7 @@ public class TopTenTracksFragment extends Fragment {
     boolean mTwoPane;
     private TracksAdapter tracksAdapter;
     private List<Track> mTracks = new ArrayList<>();
+    private Tracks mTracklist;
 
     public TopTenTracksFragment() {
     }
@@ -116,10 +115,10 @@ public class TopTenTracksFragment extends Fragment {
             fetchTracks.execute(mArtistId);
         }
         Intent intent = getActivity().getIntent();
-        if (intent != null && intent.hasExtra(ARTIST_ID_KEY)){
+        if (intent != null && intent.hasExtra(ARTIST_ID_KEY)) {
             mArtistId = intent.getStringExtra(ARTIST_ID_KEY);
             mArtistName = intent.getStringExtra(ARTIST_NAME_KEY);
-            Log.v("TOP TEN", mArtistId + mArtistName );
+            Log.v("TOP TEN", mArtistId + mArtistName);
             FetchTracks fetchTracks = new FetchTracks();
             fetchTracks.execute(mArtistId);
         }
@@ -132,18 +131,20 @@ public class TopTenTracksFragment extends Fragment {
         list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                String trackPreviewUrl = mTracks.get(position).preview_url;
-                String trackAlbum = mTracks.get(position).album.name;
-                String trackName = mTracks.get(position).name;
-                String trackAlbumCover = mTracks.get(position).album.images.get(1).url;
+//                String trackPreviewUrl = mTracks.get(position).preview_url;
+//                String trackAlbum = mTracks.get(position).album.name;
+//                String trackName = mTracks.get(position).name;
+//                String trackAlbumCover = mTracks.get(position).album.images.get(1).url;
 
                 Bundle args = new Bundle();
                 args.putString(TrackPlayerFragment.ARTIST_NAME_KEY, mArtistName);
-                args.putString(TrackPlayerFragment.TRACK_NAME_KEY, trackName);
-                args.putString(TrackPlayerFragment.PREVIEW_URL_KEY, trackPreviewUrl);
-                args.putString(TrackPlayerFragment.ALBUM_KEY, trackAlbum);
-                args.putString(TrackPlayerFragment.ALBUM_COVER_KEY, trackAlbumCover);
-                args.putBoolean(TrackPlayerFragment.PANES_KEY, mTwoPane);
+//                args.putString(TrackPlayerFragment.TRACK_NAME_KEY, trackName);
+//                args.putString(TrackPlayerFragment.PREVIEW_URL_KEY, trackPreviewUrl);
+//                args.putString(TrackPlayerFragment.ALBUM_KEY, trackAlbum);
+//                args.putString(TrackPlayerFragment.ALBUM_COVER_KEY, trackAlbumCover);
+//                args.putBoolean(TrackPlayerFragment.PANES_KEY, mTwoPane);
+                args.putInt(TrackPlayerFragment.POSITION_KEY, position);
+                args.putParcelable(TrackPlayerFragment.TRACK_LIST_KEY, mTracklist);
 
                 TrackPlayerFragment trackPlayerFragment = new TrackPlayerFragment();
                 trackPlayerFragment.setArguments(args);
@@ -163,12 +164,12 @@ public class TopTenTracksFragment extends Fragment {
         protected Tracks doInBackground(String... params) {
             SpotifyApi api = new SpotifyApi();
             SpotifyService spotify = api.getService();
-            Map<String, Object> options = new HashMap<>();
-            options.put("country", Locale.getDefault().getCountry());
+//            Map<String, Object> options = new HashMap<>();
+//            options.put("country", Locale.getDefault().getCountry());
 
             try {
-                Log.v(LOG_TAG, spotify.getArtistTopTrack(mArtistId, options).tracks.toString());
-                return spotify.getArtistTopTrack(mArtistId, options);
+                Log.v(LOG_TAG, spotify.getArtistTopTrack(mArtistId, Locale.getDefault().getCountry()).tracks.toString());
+                return spotify.getArtistTopTrack(mArtistId, Locale.getDefault().getCountry());
             } catch (NullPointerException e) {
                 Log.v(LOG_TAG, mArtistId + "is what is returned.");
                 return null;
@@ -185,6 +186,7 @@ public class TopTenTracksFragment extends Fragment {
                 for (Track each : result.tracks) {
                     tracksAdapter.add(each);
                 }
+                mTracklist = result;
             } else {
                 Log.v(LOG_TAG, result.tracks.toString());
             }

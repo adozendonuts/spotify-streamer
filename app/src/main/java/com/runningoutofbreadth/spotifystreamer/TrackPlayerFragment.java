@@ -18,22 +18,28 @@ import com.squareup.picasso.Picasso;
 
 import java.io.IOException;
 
+import kaaes.spotify.webapi.android.models.Tracks;
+
 /**
  * A placeholder fragment containing a simple view.
  */
 public class TrackPlayerFragment extends DialogFragment {
-    static final String TRACK_NAME_KEY = "TRACK";
+    static final String TRACK_LIST_KEY = "TRACKLIST";
+    static final String POSITION_KEY = "POSITION";
+    //    static final String TRACK_NAME_KEY = "TRACK";
     static final String ARTIST_NAME_KEY = "ARTIST";
-    static final String PREVIEW_URL_KEY = "URL";
-    static final String ALBUM_KEY = "ALBUM";
-    static final String ALBUM_COVER_KEY = "COVER";
-    static final String PANES_KEY = "PANES";
+//    static final String PREVIEW_URL_KEY = "URL";
+//    static final String ALBUM_KEY = "ALBUM";
+//    static final String ALBUM_COVER_KEY = "COVER";
+//    static final String PANES_KEY = "PANES";
     private String mTrackPreviewUrl;
     private String mTrackArtist;
     private String mTrackAlbum;
     private String mTrackAlbumCover;
     private String mTrackName;
-    boolean mTwoPane;
+    //    boolean mTwoPane;
+    private Tracks mTrackList;
+    private int mPosition;
     MediaPlayer mediaPlayer = new MediaPlayer();
 
     public TrackPlayerFragment() {
@@ -45,46 +51,29 @@ public class TrackPlayerFragment extends DialogFragment {
 
         Bundle args = getArguments();
         if (args != null) {
+            mTrackList = args.getParcelable(TRACK_LIST_KEY);
+            mPosition = args.getInt(POSITION_KEY);
             mTrackArtist = args.getString(ARTIST_NAME_KEY);
-            mTrackName = args.getString(TRACK_NAME_KEY);
-            mTrackPreviewUrl = args.getString(PREVIEW_URL_KEY);
-            mTrackAlbum = args.getString(ALBUM_KEY);
-            mTrackAlbumCover = args.getString(ALBUM_COVER_KEY);
-            mTwoPane = args.getBoolean(PANES_KEY, mTwoPane);
+            mTrackName = mTrackList.tracks.get(mPosition).name;
+            mTrackPreviewUrl = mTrackList.tracks.get(mPosition).preview_url;
+            mTrackAlbum = mTrackList.tracks.get(mPosition).album.name;
+            mTrackAlbumCover = mTrackList.tracks.get(mPosition).album.images.get(0).url;
+//            mTwoPane = args.getBoolean(PANES_KEY, mTwoPane);
+
         }
 
         final View rootView = inflater.inflate(R.layout.fragment_player, container, false);
 
-//        Intent intent = getActivity().getIntent();
-//        if (intent != null && intent.hasExtra("URL")) {
-//            trackPreviewUrl = intent.getStringExtra("URL");
-//            trackArtist = intent.getStringExtra("Artist");
-//            trackAlbum = intent.getStringExtra("Album");
-//            trackName = intent.getStringExtra("Track");
-//            trackAlbumCover = intent.getStringExtra("Cover");
-//        }
-
-//        try {
-//            Toast toast = Toast.makeText(getActivity().getApplicationContext(),
-//                    trackPreviewUrl + "\n"
-//                            + trackArtist + "\n"
-//                            + trackAlbum + "\n"
-//                            + trackName + "\n"
-//                    , Toast.LENGTH_LONG);
-//            toast.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
-//            toast.show();
-//        } catch (NullPointerException e) {
-//            Log.v("YO DAWG", "This don't got no url");
-//        }
-
         TextView artistTextView = (TextView) rootView.findViewById(R.id.player_artist_name);
-        TextView albumTextView = (TextView) rootView.findViewById(R.id.player_album_name);
-        ImageView albumImageView = (ImageView) rootView.findViewById(R.id.player_album_cover);
-        TextView trackTextView = (TextView) rootView.findViewById(R.id.player_track_name);
-
         artistTextView.setText(mTrackArtist);
+
+        TextView albumTextView = (TextView) rootView.findViewById(R.id.player_album_name);
         albumTextView.setText(mTrackAlbum);
+
+        ImageView albumImageView = (ImageView) rootView.findViewById(R.id.player_album_cover);
         Picasso.with(getActivity().getApplicationContext()).load(mTrackAlbumCover).into(albumImageView);
+
+        TextView trackTextView = (TextView) rootView.findViewById(R.id.player_track_name);
         trackTextView.setText(mTrackName);
 
         mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
@@ -96,6 +85,8 @@ public class TrackPlayerFragment extends DialogFragment {
         mediaPlayer.prepareAsync();
 
         Button playButton = (Button) rootView.findViewById(R.id.player_play_pause_button);
+        Button prevButton = (Button) rootView.findViewById(R.id.player_track_previous_button);
+        Button nextButton = (Button) rootView.findViewById(R.id.player_track_next_button);
         playButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -105,6 +96,23 @@ public class TrackPlayerFragment extends DialogFragment {
                 } else {
                     mediaPlayer.start();
                     Log.v("PLAY BUTTON PRESSED", "hopefully it is playing" + mTrackPreviewUrl);
+                }
+            }
+        });
+        prevButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mediaPlayer.stop();
+                if(mPosition!= 0) {
+                    mPosition -= 1;
+//                    mTrackName = mTrackList.tracks.get(mPosition).name;
+//                    mTrackPreviewUrl = mTrackList.tracks.get(mPosition).preview_url;
+//                    mTrackAlbum = mTrackList.tracks.get(mPosition).album.name;
+//                    mTrackAlbumCover = mTrackList.tracks.get(mPosition).album.images.get(0).url;
+//                    artistTextView.setText(mTrackArtist);
+//                    albumTextView.setText(mTrackAlbum);
+//                    Picasso.with(getActivity().getApplicationContext()).load(mTrackAlbumCover).into(albumImageView);
+//                    trackTextView.setText(mTrackName);
                 }
             }
         });
