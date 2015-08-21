@@ -110,7 +110,6 @@ public class TopTenTracksFragment extends Fragment {
             mArtistId = arguments.getString(ARTIST_ID_KEY);
             mArtistName = arguments.getString(ARTIST_NAME_KEY);
             mTwoPane = arguments.getBoolean(PANE_KEY);
-            Log.v("TOP TEN TRACKS FRAGMENT", mArtistId + " " + mArtistName);
             FetchTracks fetchTracks = new FetchTracks();
             fetchTracks.execute(mArtistId);
         }
@@ -118,7 +117,6 @@ public class TopTenTracksFragment extends Fragment {
         if (intent != null && intent.hasExtra(ARTIST_ID_KEY)) {
             mArtistId = intent.getStringExtra(ARTIST_ID_KEY);
             mArtistName = intent.getStringExtra(ARTIST_NAME_KEY);
-            Log.v("TOP TEN", mArtistId + mArtistName);
             FetchTracks fetchTracks = new FetchTracks();
             fetchTracks.execute(mArtistId);
         }
@@ -131,18 +129,8 @@ public class TopTenTracksFragment extends Fragment {
         list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-//                String trackPreviewUrl = mTracks.get(position).preview_url;
-//                String trackAlbum = mTracks.get(position).album.name;
-//                String trackName = mTracks.get(position).name;
-//                String trackAlbumCover = mTracks.get(position).album.images.get(1).url;
-
                 Bundle args = new Bundle();
                 args.putString(TrackPlayerFragment.ARTIST_NAME_KEY, mArtistName);
-//                args.putString(TrackPlayerFragment.TRACK_NAME_KEY, trackName);
-//                args.putString(TrackPlayerFragment.PREVIEW_URL_KEY, trackPreviewUrl);
-//                args.putString(TrackPlayerFragment.ALBUM_KEY, trackAlbum);
-//                args.putString(TrackPlayerFragment.ALBUM_COVER_KEY, trackAlbumCover);
-//                args.putBoolean(TrackPlayerFragment.PANES_KEY, mTwoPane);
                 args.putInt(TrackPlayerFragment.POSITION_KEY, position);
                 args.putParcelable(TrackPlayerFragment.TRACK_LIST_KEY, mTracklist);
 
@@ -164,23 +152,18 @@ public class TopTenTracksFragment extends Fragment {
         protected Tracks doInBackground(String... params) {
             SpotifyApi api = new SpotifyApi();
             SpotifyService spotify = api.getService();
-//            Map<String, Object> options = new HashMap<>();
-//            options.put("country", Locale.getDefault().getCountry());
 
             try {
                 Log.v(LOG_TAG, spotify.getArtistTopTrack(mArtistId, Locale.getDefault().getCountry()).tracks.toString());
                 return spotify.getArtistTopTrack(mArtistId, Locale.getDefault().getCountry());
             } catch (NullPointerException e) {
-                Log.v(LOG_TAG, mArtistId + "is what is returned.");
+                e.printStackTrace();
                 return null;
             }
         }
 
         @Override
         public void onPostExecute(Tracks result) {
-            Log.v(LOG_TAG, "M TRACKS SIZE = " + tracksAdapter.getCount());
-            Log.v(LOG_TAG, "Result = " + result);
-
             tracksAdapter.clear();
             if (result.tracks != null) {
                 for (Track each : result.tracks) {
@@ -190,7 +173,6 @@ public class TopTenTracksFragment extends Fragment {
             } else {
                 Log.v(LOG_TAG, result.tracks.toString());
             }
-
         }
     }
 }
