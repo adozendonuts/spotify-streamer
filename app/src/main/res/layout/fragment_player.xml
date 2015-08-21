@@ -51,6 +51,7 @@
 
     <!-- layout block for "scrub" bar-->
     <SeekBar
+        android:id="@+id/player_seekbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:paddingBottom="8dp"

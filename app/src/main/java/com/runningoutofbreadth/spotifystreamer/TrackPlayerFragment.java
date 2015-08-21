@@ -4,6 +4,7 @@ import android.app.Dialog;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v4.app.DialogFragment;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -11,6 +12,7 @@ import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.SeekBar;
 import android.widget.TextView;
 
 import com.squareup.picasso.Picasso;
@@ -34,6 +36,8 @@ public class TrackPlayerFragment extends DialogFragment {
     private Tracks mTrackList;
     private int mPosition;
     MediaPlayer mediaPlayer = new MediaPlayer();
+    private SeekBar mSeekBar;
+    Handler mHandler = new Handler();
 
     public TrackPlayerFragment() {
     }
@@ -67,6 +71,7 @@ public class TrackPlayerFragment extends DialogFragment {
         final TextView trackTextView = (TextView) rootView.findViewById(R.id.player_track_name);
         trackTextView.setText(mTrackName);
 
+        mSeekBar = (SeekBar) rootView.findViewById(R.id.player_seekbar);
         mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
         try {
             mediaPlayer.setDataSource(mTrackPreviewUrl);
@@ -74,6 +79,7 @@ public class TrackPlayerFragment extends DialogFragment {
             e.printStackTrace();
         }
         mediaPlayer.prepareAsync();
+
 
         Button playButton = (Button) rootView.findViewById(R.id.player_play_pause_button);
         Button prevButton = (Button) rootView.findViewById(R.id.player_track_previous_button);
@@ -87,6 +93,7 @@ public class TrackPlayerFragment extends DialogFragment {
                     mediaPlayer.pause();
                 } else {
                     mediaPlayer.start();
+                    mHandler.postDelayed(updateSeekBar, 100);
                 }
             }
         });
@@ -99,12 +106,12 @@ public class TrackPlayerFragment extends DialogFragment {
                     updateViews(artistTextView, albumTextView, albumImageView, trackTextView, mPosition);
                     try {
                         mediaPlayer.setDataSource(mTrackPreviewUrl);
-                        mediaPlayer.prepareAsync();
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
+                    mediaPlayer.prepareAsync();
                 }
-                mediaPlayer.start();
+                ;
             }
         });
         nextButton.setOnClickListener(new View.OnClickListener() {
@@ -116,12 +123,11 @@ public class TrackPlayerFragment extends DialogFragment {
                     updateViews(artistTextView, albumTextView, albumImageView, trackTextView, mPosition);
                     try {
                         mediaPlayer.setDataSource(mTrackPreviewUrl);
-                        mediaPlayer.prepareAsync();
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
+                    mediaPlayer.prepareAsync();
                 }
-                mediaPlayer.start();
             }
         });
 
@@ -140,6 +146,21 @@ public class TrackPlayerFragment extends DialogFragment {
         Picasso.with(getActivity().getApplicationContext()).load(mTrackAlbumCover).into(albumImageView);
         trackTextView.setText(mTrackName);
     }
+
+    private final Runnable updateSeekBar = new Runnable() {
+        @Override
+        public void run() {
+            int duration = mediaPlayer.getDuration();
+            int currentPosition = mediaPlayer.getCurrentPosition();
+            mSeekBar.setMax(duration);
+            mSeekBar.setProgress(currentPosition);
+            mHandler.postDelayed(this, 100);
+
+            if (!mediaPlayer.isPlaying()) {
+                mHandler.removeCallbacks(updateSeekBar);
+            }
+        }
+    };
 
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
