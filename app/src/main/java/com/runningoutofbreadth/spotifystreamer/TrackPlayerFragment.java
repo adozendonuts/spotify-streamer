@@ -1,6 +1,5 @@
 package com.runningoutofbreadth.spotifystreamer;
 
-import android.app.Dialog;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.Bundle;
@@ -10,7 +9,6 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.Window;
 import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -28,12 +26,14 @@ public class TrackPlayerFragment extends DialogFragment {
     static final String TRACK_LIST_KEY = "TRACKLIST";
     static final String POSITION_KEY = "POSITION";
     static final String ARTIST_NAME_KEY = "ARTIST";
+    //    static final String SIZE_KEY = "PANES";
     private String mTrackPreviewUrl;
     private String mTrackArtist;
     private String mTrackAlbum;
     private String mTrackAlbumCover;
     private String mTrackName;
     private Tracks mTrackList;
+    //    private boolean mTwoPane;
     private int mPosition;
     MediaPlayer mediaPlayer = new MediaPlayer();
     Handler mHandler = new Handler();
@@ -86,6 +86,7 @@ public class TrackPlayerFragment extends DialogFragment {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
         mediaPlayer.prepareAsync();
 
         String duration = String.format("%02d:%02d", 0, 30);
@@ -96,72 +97,85 @@ public class TrackPlayerFragment extends DialogFragment {
         ImageView nextButton = (ImageView) rootView.findViewById(R.id.player_track_next_button);
 
         //TODO: refactor so this code doesn't repeat 3 times
-        playButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (mediaPlayer.isPlaying()) {
-                    mediaPlayer.pause();
-                    playButton.setImageResource(android.R.drawable.ic_media_pause);
-                } else {
-                    playButton.setImageResource(android.R.drawable.ic_media_play);
-                    mediaPlayer.start();
-                    mHandler.postDelayed(updateSeekBar, 100);
-                }
-            }
-        });
-        prevButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mediaPlayer.reset();
-                if (mPosition != 0) {
-                    mPosition -= 1;
-                    updateViews(artistTextView, albumTextView, albumImageView, trackTextView, mPosition);
-                    try {
-                        mediaPlayer.setDataSource(mTrackPreviewUrl);
-                    } catch (IOException e) {
-                        e.printStackTrace();
+        playButton.setOnClickListener(
+                new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        if (mediaPlayer.isPlaying()) {
+                            mediaPlayer.pause();
+                            playButton.setImageResource(android.R.drawable.ic_media_pause);
+                        } else {
+                            playButton.setImageResource(android.R.drawable.ic_media_play);
+                            mediaPlayer.start();
+                            mHandler.postDelayed(updateSeekBar, 100);
+                        }
                     }
-                    mediaPlayer.prepareAsync();
                 }
-                ;
-            }
-        });
-        nextButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mediaPlayer.reset();
-                if (mPosition != mTrackList.tracks.size()) {
-                    mPosition += 1;
-                    updateViews(artistTextView, albumTextView, albumImageView, trackTextView, mPosition);
-                    try {
-                        mediaPlayer.setDataSource(mTrackPreviewUrl);
-                    } catch (IOException e) {
-                        e.printStackTrace();
+
+        );
+        prevButton.setOnClickListener(
+                new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        mediaPlayer.reset();
+                        if (mPosition != 0) {
+                            mPosition -= 1;
+                            updateViews(artistTextView, albumTextView, albumImageView, trackTextView, mPosition);
+                            try {
+                                mediaPlayer.setDataSource(mTrackPreviewUrl);
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                            mediaPlayer.prepareAsync();
+                        }
+                        ;
                     }
-                    mediaPlayer.prepareAsync();
                 }
-            }
-        });
 
-        mSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                if (fromUser) {
-                    mediaPlayer.seekTo(progress * 1000);
-                    Log.v("SEEK ON PROGRESS", "progress value: " + progress);
+        );
+        nextButton.setOnClickListener(
+                new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        mediaPlayer.reset();
+                        if (mPosition != mTrackList.tracks.size()-1) {
+                            mPosition += 1;
+                            updateViews(artistTextView, albumTextView, albumImageView, trackTextView, mPosition);
+                            try {
+                                mediaPlayer.setDataSource(mTrackPreviewUrl);
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                            mediaPlayer.prepareAsync();
+                        }
+                    }
                 }
-            }
 
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-                mHandler.removeCallbacks(updateSeekBar);
-            }
+        );
 
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-                mHandler.postDelayed(updateSeekBar, 100);
-            }
-        });
+        mSeekBar.setOnSeekBarChangeListener(
+                new SeekBar.OnSeekBarChangeListener() {
+
+                    @Override
+                    public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                        if (fromUser) {
+                            mediaPlayer.seekTo(progress * 1000);
+                            Log.v("SEEK ON PROGRESS", "progress value: " + progress);
+                        }
+                    }
+
+                    @Override
+                    public void onStartTrackingTouch(SeekBar seekBar) {
+                        mHandler.removeCallbacks(updateSeekBar);
+                    }
+
+                    @Override
+                    public void onStopTrackingTouch(SeekBar seekBar) {
+                        mHandler.postDelayed(updateSeekBar, 100);
+                    }
+                }
+
+        );
 
         return rootView;
     }
@@ -177,7 +191,6 @@ public class TrackPlayerFragment extends DialogFragment {
         albumTextView.setText(mTrackAlbum);
         Picasso.with(getActivity().getApplicationContext()).load(mTrackAlbumCover).into(albumImageView);
         trackTextView.setText(mTrackName);
-        ;
     }
 
     private final Runnable updateSeekBar = new Runnable() {
@@ -201,16 +214,17 @@ public class TrackPlayerFragment extends DialogFragment {
         }
     };
 
-    @Override
-    public Dialog onCreateDialog(Bundle savedInstanceState) {
-        // The only reason you might override this method when using onCreateView() is
-        // to modify any dialog characteristics. For example, the dialog includes a
-        // title by default, but your custom layout might not need it. So here you can
-        // remove the dialog title, but you must call the superclass to get the Dialog.
-        Dialog dialog = super.onCreateDialog(savedInstanceState);
-        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-        return dialog;
-    }
+//    @Override
+//    public Dialog onCreateDialog(Bundle savedInstanceState) {
+//        // The only reason you might override this method when using onCreateView() is
+//        // to modify any dialog characteristics. For example, the dialog includes a
+//        // title by default, but your custom layout might not need it. So here you can
+//        // remove the dialog title, but you must call the superclass to get the Dialog.
+//        Dialog dialog = super.onCreateDialog(savedInstanceState);
+//        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+//        dialog.setContentView(R.layout.fragment_player);
+//        return dialog;
+//    }
 
     @Override
     public void onStop() {

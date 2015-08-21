@@ -1,5 +1,6 @@
 package com.runningoutofbreadth.spotifystreamer;
 
+import android.support.v4.app.FragmentTransaction;
 import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
@@ -133,17 +134,31 @@ public class TopTenTracksFragment extends Fragment {
                 args.putString(TrackPlayerFragment.ARTIST_NAME_KEY, mArtistName);
                 args.putInt(TrackPlayerFragment.POSITION_KEY, position);
                 args.putParcelable(TrackPlayerFragment.TRACK_LIST_KEY, mTracklist);
+//                args.putBoolean(TrackPlayerFragment.SIZE_KEY, mTwoPane);
 
-                TrackPlayerFragment trackPlayerFragment = new TrackPlayerFragment();
-                trackPlayerFragment.setArguments(args);
-
-                FragmentManager fragmentManager = getFragmentManager();
-                trackPlayerFragment.show(fragmentManager, PLAYERFRAGMENT_TAG);
+                showDialog(args);
             }
         });
 
         list.setAdapter(tracksAdapter);
         return rootView;
+    }
+
+    public void showDialog(Bundle args) {
+        TrackPlayerFragment trackPlayerFragment = new TrackPlayerFragment();
+        FragmentManager fragmentManager = getFragmentManager();
+        trackPlayerFragment.setArguments(args);
+
+        if (mTwoPane) {
+            trackPlayerFragment.show(fragmentManager, PLAYERFRAGMENT_TAG);
+        } else {
+            FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+            fragmentTransaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
+            fragmentTransaction.add(android.R.id.content, trackPlayerFragment)
+                    .addToBackStack(null)
+                    .commit();
+        }
+
     }
 
     public class FetchTracks extends AsyncTask<String, Void, Tracks> {
