@@ -6,7 +6,6 @@ import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.DialogFragment;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -32,6 +31,7 @@ public class TrackPlayerFragment extends DialogFragment {
     static final String ALBUM_NAME_KEY = "ALBUM";
     static final String ALBUM_COVER_KEY = "COVER";
     static final String TRACK_NAME_KEY = "TRACK";
+    static final String CURRENT_POSITION_KEY = "CURRENTTIME";
     private String mTrackPreviewUrl;
     private String mTrackArtist;
     private String mTrackAlbum;
@@ -40,11 +40,11 @@ public class TrackPlayerFragment extends DialogFragment {
     private Tracks mTrackList;
     private int mPosition;
     private int mCurrentPosition;
-    MediaPlayer mediaPlayer = new MediaPlayer();
-    Handler mHandler = new Handler();
-    private SeekBar mSeekBar;
-    private TextView mCurrentTime;
-    private TextView mFullTime;
+    private MediaPlayer mediaPlayer = new MediaPlayer();
+    private Handler mHandler = new Handler();
+    static SeekBar mSeekBar;
+    private TextView mCurrentTimeTextView;
+    private TextView mDurationTextView;
 
     public TrackPlayerFragment() {
     }
@@ -52,7 +52,6 @@ public class TrackPlayerFragment extends DialogFragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         if (savedInstanceState != null) {
-            Log.v("SAVED INSTANCE STATE?", "mPosition onCreate =" + mPosition);
             mPosition = savedInstanceState.getInt(POSITION_KEY);
             mTrackPreviewUrl = savedInstanceState.getString(TRACK_URL_KEY);
             mTrackArtist = savedInstanceState.getString(ARTIST_NAME_KEY);
@@ -60,7 +59,7 @@ public class TrackPlayerFragment extends DialogFragment {
             mTrackAlbumCover = savedInstanceState.getString(ALBUM_COVER_KEY);
             mTrackName = savedInstanceState.getString(TRACK_NAME_KEY);
             mTrackList = savedInstanceState.getParcelable(TRACK_LIST_KEY);
-            Log.v("SAVED INSTANCE STATE?", "new mPosition onCreate =" + mPosition);
+            mCurrentPosition = savedInstanceState.getInt(CURRENT_POSITION_KEY);
         }
         super.onCreate(savedInstanceState);
     }
@@ -74,7 +73,7 @@ public class TrackPlayerFragment extends DialogFragment {
         savedInstanceState.putString(ALBUM_NAME_KEY, mTrackAlbum);
         savedInstanceState.putString(ALBUM_COVER_KEY, mTrackAlbumCover);
         savedInstanceState.putString(TRACK_NAME_KEY, mTrackName);
-        Log.v("SAVED INSTANCE STATE?", "mPosition onSavedInstanceState =" + mPosition);
+        savedInstanceState.putInt(CURRENT_POSITION_KEY, mCurrentPosition);
         super.onSaveInstanceState(savedInstanceState);
     }
 
@@ -105,19 +104,15 @@ public class TrackPlayerFragment extends DialogFragment {
 
         final ImageView albumImageView = (ImageView) rootView.findViewById(R.id.player_album_cover);
         picassoLoader(mTrackAlbumCover, albumImageView);
-//        Picasso.with(getActivity().getApplicationContext()).load(mTrackAlbumCover)
-//                .resize(300,300)
-//                .centerCrop()
-//                .into(albumImageView);
 
         final TextView trackTextView = (TextView) rootView.findViewById(R.id.player_track_name);
         trackTextView.setText(mTrackName);
 
         mSeekBar = (SeekBar) rootView.findViewById(R.id.player_seekbar);
 
-        mCurrentTime = (TextView) rootView.findViewById(R.id.player_track_time_start);
+        mCurrentTimeTextView = (TextView) rootView.findViewById(R.id.player_track_time_start);
 
-        mFullTime = (TextView) rootView.findViewById(R.id.player_track_time_end);
+        mDurationTextView = (TextView) rootView.findViewById(R.id.player_track_time_end);
 
 
         mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
@@ -130,7 +125,11 @@ public class TrackPlayerFragment extends DialogFragment {
         mediaPlayer.prepareAsync();
 
         String duration = String.format("%01d:%02d", 0, 30);
-        mFullTime.setText(duration);
+        mDurationTextView.setText(duration);
+        if (mCurrentPosition != 0) {
+            mediaPlayer.seekTo(mCurrentPosition);
+            mediaPlayer.start();
+        }
 
         final ImageView playButton = (ImageView) rootView.findViewById(R.id.player_play_pause_button);
         ImageView prevButton = (ImageView) rootView.findViewById(R.id.player_track_previous_button);
@@ -200,7 +199,6 @@ public class TrackPlayerFragment extends DialogFragment {
                     public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                         if (fromUser) {
                             mediaPlayer.seekTo(progress * 1000);
-                            Log.v("SEEK ON PROGRESS", "progress value: " + progress);
                         }
                     }
 
@@ -231,17 +229,14 @@ public class TrackPlayerFragment extends DialogFragment {
         artistTextView.setText(mTrackArtist);
         albumTextView.setText(mTrackAlbum);
         picassoLoader(mTrackAlbumCover, albumImageView);
-//        Picasso.with(getActivity().getApplicationContext()).load(mTrackAlbumCover)
-//                .resize(300, 300)
-//                .centerCrop()
-//                .into(albumImageView);
         trackTextView.setText(mTrackName);
     }
 
-    private final Runnable updateSeekBar = new Runnable() {
+    public Runnable updateSeekBar = new Runnable() {
         int duration;
         int currentPosition;
         String currentTimeString;
+        boolean stopThread = false;
 
         @Override
         public void run() {
@@ -250,39 +245,42 @@ public class TrackPlayerFragment extends DialogFragment {
             currentTimeString = String.format("%01d:%02d", 0, currentPosition);
             mSeekBar.setMax(duration);
             mSeekBar.setProgress(currentPosition);
-            mCurrentTime.setText(currentTimeString);
-            mHandler.postDelayed(this, 100);
+            mCurrentTimeTextView.setText(currentTimeString);
+            mCurrentPosition = currentPosition;
 
+            mHandler.postDelayed(this, 100);
             if (!mediaPlayer.isPlaying()) {
                 mHandler.removeCallbacks(updateSeekBar);
             }
+
         }
     };
 
-    public void picassoLoader(String stringUrl, ImageView imageView){
-        Picasso.with(getActivity().getApplicationContext()).load(stringUrl)
-                .resize(300,300)
-                .centerCrop()
-                .into(imageView);
-    }
 
-    @Override
-    public Dialog onCreateDialog(Bundle savedInstanceState) {
-        Dialog dialog = super.onCreateDialog(savedInstanceState);
-        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-        return dialog;
-    }
-
-    @Override
-    public void onStop() {
-        super.onStop();
-        if (mediaPlayer != null) {
-            if (mediaPlayer.isPlaying()) {
-                mediaPlayer.pause();
-            }
-            mediaPlayer.release();
-            mediaPlayer = null;
+        public void picassoLoader(String stringUrl, ImageView imageView) {
+            Picasso.with(getActivity().getApplicationContext()).load(stringUrl)
+                    .resize(300, 300)
+                    .centerCrop()
+                    .into(imageView);
         }
-        mHandler.removeCallbacks(updateSeekBar);
+
+        @Override
+        public Dialog onCreateDialog(Bundle savedInstanceState) {
+            Dialog dialog = super.onCreateDialog(savedInstanceState);
+            dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+            return dialog;
+        }
+
+        @Override
+        public void onStop() {
+            super.onStop();
+            if (mediaPlayer != null) {
+                if (mediaPlayer.isPlaying()) {
+                    mediaPlayer.pause();
+                }
+                mediaPlayer.release();
+                mediaPlayer = null;
+            }
+            mHandler.removeCallbacks(updateSeekBar);
+        }
     }
-}

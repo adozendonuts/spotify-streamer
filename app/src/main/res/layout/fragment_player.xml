@@ -28,31 +28,27 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:padding="8dp"
-                android:text="@string/artist" />
+                android:padding="8dp" />
 
             <TextView
                 android:id="@+id/player_album_name"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:padding="8dp"
-                android:text="@string/album" />
+                android:padding="8dp" />
 
             <ImageView
                 android:id="@+id/player_album_cover"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:src="@mipmap/ic_launcher" />
+                android:layout_gravity="center" />
 
             <TextView
                 android:id="@+id/player_track_name"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:padding="8dp"
-                android:text="@string/track" />
+                android:padding="8dp" />
         </LinearLayout>
 
         <!-- layout block for "scrub" bar-->
@@ -103,6 +99,9 @@
                 android:id="@+id/player_track_previous_button"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentStart="true"
+                android:layout_centerVertical="true"
                 android:padding="4dp"
                 android:src="@android:drawable/ic_media_previous" />
 
@@ -110,8 +109,8 @@
                 android:id="@+id/player_play_pause_button"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_toEndOf="@+id/player_track_previous_button"
-                android:layout_toRightOf="@+id/player_track_previous_button"
+                android:layout_centerHorizontal="true"
+                android:layout_centerVertical="true"
                 android:padding="4dp"
                 android:src="@android:drawable/ic_media_play" />
 
@@ -119,8 +118,9 @@
                 android:id="@+id/player_track_next_button"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_toEndOf="@+id/player_track_previous_button"
-                android:layout_toRightOf="@+id/player_play_pause_button"
+                android:layout_alignParentEnd="true"
+                android:layout_alignParentRight="true"
+                android:layout_centerVertical="true"
                 android:padding="4dp"
                 android:src="@android:drawable/ic_media_next" />
 
