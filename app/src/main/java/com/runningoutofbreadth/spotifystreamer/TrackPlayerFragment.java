@@ -36,8 +36,10 @@ public class TrackPlayerFragment extends DialogFragment {
     private Tracks mTrackList;
     private int mPosition;
     MediaPlayer mediaPlayer = new MediaPlayer();
-    private SeekBar mSeekBar;
     Handler mHandler = new Handler();
+    private SeekBar mSeekBar;
+    private TextView mCurrentTime;
+    private TextView mFullTime;
 
     public TrackPlayerFragment() {
     }
@@ -72,6 +74,12 @@ public class TrackPlayerFragment extends DialogFragment {
         trackTextView.setText(mTrackName);
 
         mSeekBar = (SeekBar) rootView.findViewById(R.id.player_seekbar);
+
+        mCurrentTime = (TextView)rootView.findViewById(R.id.player_track_time_start);
+
+        mFullTime = (TextView)rootView.findViewById(R.id.player_track_time_end);
+
+
         mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
         try {
             mediaPlayer.setDataSource(mTrackPreviewUrl);
@@ -80,6 +88,8 @@ public class TrackPlayerFragment extends DialogFragment {
         }
         mediaPlayer.prepareAsync();
 
+        String duration = String.format("%02d:%02d", 0, 30);
+        mFullTime.setText(duration);
 
         Button playButton = (Button) rootView.findViewById(R.id.player_play_pause_button);
         Button prevButton = (Button) rootView.findViewById(R.id.player_track_previous_button);
@@ -144,16 +154,22 @@ public class TrackPlayerFragment extends DialogFragment {
         artistTextView.setText(mTrackArtist);
         albumTextView.setText(mTrackAlbum);
         Picasso.with(getActivity().getApplicationContext()).load(mTrackAlbumCover).into(albumImageView);
-        trackTextView.setText(mTrackName);
+        trackTextView.setText(mTrackName);;
     }
 
     private final Runnable updateSeekBar = new Runnable() {
+        int duration;
+        int currentPosition;
+        String currentTimeString;
+
         @Override
         public void run() {
-            int duration = mediaPlayer.getDuration();
-            int currentPosition = mediaPlayer.getCurrentPosition();
+            duration = mediaPlayer.getDuration()/1000;
+            currentPosition = mediaPlayer.getCurrentPosition()/1000;
+            currentTimeString = String.format("%02d:%02d", 0, currentPosition);
             mSeekBar.setMax(duration);
             mSeekBar.setProgress(currentPosition);
+            mCurrentTime.setText(currentTimeString);
             mHandler.postDelayed(this, 100);
 
             if (!mediaPlayer.isPlaying()) {
@@ -183,5 +199,6 @@ public class TrackPlayerFragment extends DialogFragment {
             mediaPlayer.release();
             mediaPlayer = null;
         }
+        mHandler.removeCallbacks(updateSeekBar);
     }
 }
