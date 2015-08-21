@@ -6,11 +6,11 @@ import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.DialogFragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -75,9 +75,9 @@ public class TrackPlayerFragment extends DialogFragment {
 
         mSeekBar = (SeekBar) rootView.findViewById(R.id.player_seekbar);
 
-        mCurrentTime = (TextView)rootView.findViewById(R.id.player_track_time_start);
+        mCurrentTime = (TextView) rootView.findViewById(R.id.player_track_time_start);
 
-        mFullTime = (TextView)rootView.findViewById(R.id.player_track_time_end);
+        mFullTime = (TextView) rootView.findViewById(R.id.player_track_time_end);
 
 
         mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
@@ -91,9 +91,9 @@ public class TrackPlayerFragment extends DialogFragment {
         String duration = String.format("%02d:%02d", 0, 30);
         mFullTime.setText(duration);
 
-        Button playButton = (Button) rootView.findViewById(R.id.player_play_pause_button);
-        Button prevButton = (Button) rootView.findViewById(R.id.player_track_previous_button);
-        Button nextButton = (Button) rootView.findViewById(R.id.player_track_next_button);
+        final ImageView playButton = (ImageView) rootView.findViewById(R.id.player_play_pause_button);
+        ImageView prevButton = (ImageView) rootView.findViewById(R.id.player_track_previous_button);
+        ImageView nextButton = (ImageView) rootView.findViewById(R.id.player_track_next_button);
 
         //TODO: refactor so this code doesn't repeat 3 times
         playButton.setOnClickListener(new View.OnClickListener() {
@@ -101,7 +101,9 @@ public class TrackPlayerFragment extends DialogFragment {
             public void onClick(View v) {
                 if (mediaPlayer.isPlaying()) {
                     mediaPlayer.pause();
+                    playButton.setImageResource(android.R.drawable.ic_media_pause);
                 } else {
+                    playButton.setImageResource(android.R.drawable.ic_media_play);
                     mediaPlayer.start();
                     mHandler.postDelayed(updateSeekBar, 100);
                 }
@@ -141,6 +143,26 @@ public class TrackPlayerFragment extends DialogFragment {
             }
         });
 
+        mSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                if (fromUser) {
+                    mediaPlayer.seekTo(progress * 1000);
+                    Log.v("SEEK ON PROGRESS", "progress value: " + progress);
+                }
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+                mHandler.removeCallbacks(updateSeekBar);
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                mHandler.postDelayed(updateSeekBar, 100);
+            }
+        });
+
         return rootView;
     }
 
@@ -154,7 +176,8 @@ public class TrackPlayerFragment extends DialogFragment {
         artistTextView.setText(mTrackArtist);
         albumTextView.setText(mTrackAlbum);
         Picasso.with(getActivity().getApplicationContext()).load(mTrackAlbumCover).into(albumImageView);
-        trackTextView.setText(mTrackName);;
+        trackTextView.setText(mTrackName);
+        ;
     }
 
     private final Runnable updateSeekBar = new Runnable() {
@@ -164,8 +187,8 @@ public class TrackPlayerFragment extends DialogFragment {
 
         @Override
         public void run() {
-            duration = mediaPlayer.getDuration()/1000;
-            currentPosition = mediaPlayer.getCurrentPosition()/1000;
+            duration = mediaPlayer.getDuration() / 1000;
+            currentPosition = mediaPlayer.getCurrentPosition() / 1000;
             currentTimeString = String.format("%02d:%02d", 0, currentPosition);
             mSeekBar.setMax(duration);
             mSeekBar.setProgress(currentPosition);
