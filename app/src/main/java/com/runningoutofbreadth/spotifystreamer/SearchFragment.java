@@ -46,10 +46,7 @@ public class SearchFragment extends Fragment {
     }
 
     public interface TopTenTracksCallback {
-        /**
-         * DetailFragmentCallback for when an item has been selected.
-         */
-        public void onItemSelected(String artistId, String artistName);
+        void onItemSelected(String artistId, String artistName);
     }
 
     @Override

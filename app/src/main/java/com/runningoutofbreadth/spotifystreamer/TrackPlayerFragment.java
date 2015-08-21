@@ -1,5 +1,6 @@
 package com.runningoutofbreadth.spotifystreamer;
 
+import android.app.Dialog;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.Bundle;
@@ -9,6 +10,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
 import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -26,15 +28,18 @@ public class TrackPlayerFragment extends DialogFragment {
     static final String TRACK_LIST_KEY = "TRACKLIST";
     static final String POSITION_KEY = "POSITION";
     static final String ARTIST_NAME_KEY = "ARTIST";
-    //    static final String SIZE_KEY = "PANES";
+    static final String TRACK_URL_KEY = "URL";
+    static final String ALBUM_NAME_KEY = "ALBUM";
+    static final String ALBUM_COVER_KEY = "COVER";
+    static final String TRACK_NAME_KEY = "TRACK";
     private String mTrackPreviewUrl;
     private String mTrackArtist;
     private String mTrackAlbum;
     private String mTrackAlbumCover;
     private String mTrackName;
     private Tracks mTrackList;
-    //    private boolean mTwoPane;
     private int mPosition;
+    private int mCurrentPosition;
     MediaPlayer mediaPlayer = new MediaPlayer();
     Handler mHandler = new Handler();
     private SeekBar mSeekBar;
@@ -45,18 +50,49 @@ public class TrackPlayerFragment extends DialogFragment {
     }
 
     @Override
+    public void onCreate(Bundle savedInstanceState) {
+        if (savedInstanceState != null) {
+            Log.v("SAVED INSTANCE STATE?", "mPosition onCreate =" + mPosition);
+            mPosition = savedInstanceState.getInt(POSITION_KEY);
+            mTrackPreviewUrl = savedInstanceState.getString(TRACK_URL_KEY);
+            mTrackArtist = savedInstanceState.getString(ARTIST_NAME_KEY);
+            mTrackAlbum = savedInstanceState.getString(ALBUM_NAME_KEY);
+            mTrackAlbumCover = savedInstanceState.getString(ALBUM_COVER_KEY);
+            mTrackName = savedInstanceState.getString(TRACK_NAME_KEY);
+            mTrackList = savedInstanceState.getParcelable(TRACK_LIST_KEY);
+            Log.v("SAVED INSTANCE STATE?", "new mPosition onCreate =" + mPosition);
+        }
+        super.onCreate(savedInstanceState);
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle savedInstanceState) {
+        savedInstanceState.putInt(POSITION_KEY, mPosition);
+        savedInstanceState.putParcelable(TRACK_LIST_KEY, mTrackList);
+        savedInstanceState.putString(ARTIST_NAME_KEY, mTrackArtist);
+        savedInstanceState.putString(TRACK_URL_KEY, mTrackPreviewUrl);
+        savedInstanceState.putString(ALBUM_NAME_KEY, mTrackAlbum);
+        savedInstanceState.putString(ALBUM_COVER_KEY, mTrackAlbumCover);
+        savedInstanceState.putString(TRACK_NAME_KEY, mTrackName);
+        Log.v("SAVED INSTANCE STATE?", "mPosition onSavedInstanceState =" + mPosition);
+        super.onSaveInstanceState(savedInstanceState);
+    }
+
+    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
-        Bundle args = getArguments();
-        if (args != null) {
-            mTrackList = args.getParcelable(TRACK_LIST_KEY);
-            mPosition = args.getInt(POSITION_KEY);
-            mTrackArtist = args.getString(ARTIST_NAME_KEY);
-            mTrackName = mTrackList.tracks.get(mPosition).name;
-            mTrackPreviewUrl = mTrackList.tracks.get(mPosition).preview_url;
-            mTrackAlbum = mTrackList.tracks.get(mPosition).album.name;
-            mTrackAlbumCover = mTrackList.tracks.get(mPosition).album.images.get(0).url;
+        if (savedInstanceState == null) {
+            Bundle args = getArguments();
+            if (args != null) {
+                mTrackList = args.getParcelable(TRACK_LIST_KEY);
+                mPosition = args.getInt(POSITION_KEY);
+                mTrackArtist = args.getString(ARTIST_NAME_KEY);
+                mTrackName = mTrackList.tracks.get(mPosition).name;
+                mTrackPreviewUrl = mTrackList.tracks.get(mPosition).preview_url;
+                mTrackAlbum = mTrackList.tracks.get(mPosition).album.name;
+                mTrackAlbumCover = mTrackList.tracks.get(mPosition).album.images.get(0).url;
+            }
         }
 
         final View rootView = inflater.inflate(R.layout.fragment_player, container, false);
@@ -68,7 +104,11 @@ public class TrackPlayerFragment extends DialogFragment {
         albumTextView.setText(mTrackAlbum);
 
         final ImageView albumImageView = (ImageView) rootView.findViewById(R.id.player_album_cover);
-        Picasso.with(getActivity().getApplicationContext()).load(mTrackAlbumCover).into(albumImageView);
+        picassoLoader(mTrackAlbumCover, albumImageView);
+//        Picasso.with(getActivity().getApplicationContext()).load(mTrackAlbumCover)
+//                .resize(300,300)
+//                .centerCrop()
+//                .into(albumImageView);
 
         final TextView trackTextView = (TextView) rootView.findViewById(R.id.player_track_name);
         trackTextView.setText(mTrackName);
@@ -89,7 +129,7 @@ public class TrackPlayerFragment extends DialogFragment {
 
         mediaPlayer.prepareAsync();
 
-        String duration = String.format("%02d:%02d", 0, 30);
+        String duration = String.format("%01d:%02d", 0, 30);
         mFullTime.setText(duration);
 
         final ImageView playButton = (ImageView) rootView.findViewById(R.id.player_play_pause_button);
@@ -138,7 +178,7 @@ public class TrackPlayerFragment extends DialogFragment {
                     @Override
                     public void onClick(View v) {
                         mediaPlayer.reset();
-                        if (mPosition != mTrackList.tracks.size()-1) {
+                        if (mPosition != mTrackList.tracks.size() - 1) {
                             mPosition += 1;
                             updateViews(artistTextView, albumTextView, albumImageView, trackTextView, mPosition);
                             try {
@@ -181,6 +221,7 @@ public class TrackPlayerFragment extends DialogFragment {
     }
 
     //helper method for updating all views for dialogfragment and loading next track
+
     public void updateViews(TextView artistTextView, TextView albumTextView,
                             ImageView albumImageView, TextView trackTextView, int position) {
         mTrackName = mTrackList.tracks.get(position).name;
@@ -189,7 +230,11 @@ public class TrackPlayerFragment extends DialogFragment {
         mTrackPreviewUrl = mTrackList.tracks.get(mPosition).preview_url;
         artistTextView.setText(mTrackArtist);
         albumTextView.setText(mTrackAlbum);
-        Picasso.with(getActivity().getApplicationContext()).load(mTrackAlbumCover).into(albumImageView);
+        picassoLoader(mTrackAlbumCover, albumImageView);
+//        Picasso.with(getActivity().getApplicationContext()).load(mTrackAlbumCover)
+//                .resize(300, 300)
+//                .centerCrop()
+//                .into(albumImageView);
         trackTextView.setText(mTrackName);
     }
 
@@ -202,7 +247,7 @@ public class TrackPlayerFragment extends DialogFragment {
         public void run() {
             duration = mediaPlayer.getDuration() / 1000;
             currentPosition = mediaPlayer.getCurrentPosition() / 1000;
-            currentTimeString = String.format("%02d:%02d", 0, currentPosition);
+            currentTimeString = String.format("%01d:%02d", 0, currentPosition);
             mSeekBar.setMax(duration);
             mSeekBar.setProgress(currentPosition);
             mCurrentTime.setText(currentTimeString);
@@ -214,24 +259,26 @@ public class TrackPlayerFragment extends DialogFragment {
         }
     };
 
-//    @Override
-//    public Dialog onCreateDialog(Bundle savedInstanceState) {
-//        // The only reason you might override this method when using onCreateView() is
-//        // to modify any dialog characteristics. For example, the dialog includes a
-//        // title by default, but your custom layout might not need it. So here you can
-//        // remove the dialog title, but you must call the superclass to get the Dialog.
-//        Dialog dialog = super.onCreateDialog(savedInstanceState);
-//        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-//        dialog.setContentView(R.layout.fragment_player);
-//        return dialog;
-//    }
+    public void picassoLoader(String stringUrl, ImageView imageView){
+        Picasso.with(getActivity().getApplicationContext()).load(stringUrl)
+                .resize(300,300)
+                .centerCrop()
+                .into(imageView);
+    }
+
+    @Override
+    public Dialog onCreateDialog(Bundle savedInstanceState) {
+        Dialog dialog = super.onCreateDialog(savedInstanceState);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        return dialog;
+    }
 
     @Override
     public void onStop() {
         super.onStop();
         if (mediaPlayer != null) {
             if (mediaPlayer.isPlaying()) {
-                mediaPlayer.stop();
+                mediaPlayer.pause();
             }
             mediaPlayer.release();
             mediaPlayer = null;
