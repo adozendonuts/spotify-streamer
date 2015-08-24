@@ -80,9 +80,8 @@ public class SearchFragment extends Fragment {
             View rowView = convertView;
 
             if (rowView == null) {
-                LayoutInflater inflater = (LayoutInflater) this.getContext().
-                        getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-                rowView = inflater.inflate(R.layout.individual_artist, parent, false);
+                rowView = LayoutInflater.from(parent.getContext())
+                        .inflate(R.layout.individual_artist, parent, false);
             }
 
             String artistName = items.get(position).name;
@@ -111,12 +110,6 @@ public class SearchFragment extends Fragment {
         }
     }
 
-
-    @Override
-    public void onSaveInstanceState(Bundle savedInstanceState) {
-        savedInstanceState.getString(search);
-        super.onSaveInstanceState(savedInstanceState);
-    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -179,6 +172,7 @@ public class SearchFragment extends Fragment {
 
     public class FetchArtistData extends AsyncTask<String, Void, List<Artist>> {
         private final String LOG_TAG = FetchArtistData.class.getSimpleName();
+        private Toast toast;
 
         protected List<Artist> doInBackground(String... params) {
 
@@ -193,12 +187,15 @@ public class SearchFragment extends Fragment {
         protected void onPostExecute(List<Artist> result) {
             //takes all nested String arrays and adds them to mArtistAdapter
             if (result != null && !result.isEmpty()) {
+                if (toast != null) {
+                    toast.cancel();
+                }
                 mArtistAdapter.clear();
                 for (Artist each : result) {
                     mArtistAdapter.add(each);
                 }
             } else {
-                Toast toast = Toast.makeText(getActivity()
+                toast = Toast.makeText(getActivity()
                                 .getApplicationContext(),
                         "No results.\n" +
                                 "Try using fewer letters\n" +
