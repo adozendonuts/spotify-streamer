@@ -34,7 +34,7 @@ import kaaes.spotify.webapi.android.models.Image;
 
 
 /**
- * A placeholder fragment containing a simple view.
+ * The fragment within the main activity. Has a search bar on top and results underneath
  */
 public class SearchFragment extends Fragment {
     private ArtistAdapter mArtistAdapter;
@@ -65,6 +65,11 @@ public class SearchFragment extends Fragment {
         setRetainInstance(true);
     }
 
+    static class ViewHolder{
+        TextView artistNameView;
+        ImageView thumbnailView;
+    }
+
     public class ArtistAdapter extends ArrayAdapter<Artist> {
         List<Artist> items;
 
@@ -77,11 +82,19 @@ public class SearchFragment extends Fragment {
         //override getView method
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
-            View rowView = convertView;
+            ViewHolder viewHolder;
 
-            if (rowView == null) {
-                rowView = LayoutInflater.from(parent.getContext())
+            //if there is no existing row view, inflate a new view
+            if (convertView == null) {
+                convertView = LayoutInflater.from(parent.getContext())
                         .inflate(R.layout.individual_artist, parent, false);
+                viewHolder = new ViewHolder();
+                viewHolder.artistNameView = (TextView) convertView.findViewById(R.id.artist_name_text_view);
+                viewHolder.thumbnailView = (ImageView) convertView.findViewById(R.id.artist_thumbnail_image_view);
+                convertView.setTag(viewHolder);
+            } else {
+                // reuse "scrapview" with the same tag.
+                viewHolder = (ViewHolder) convertView.getTag();
             }
 
             String artistName = items.get(position).name;
@@ -89,24 +102,31 @@ public class SearchFragment extends Fragment {
             int lastOne = 0;
             String url;
 
-            TextView artistNameView = (TextView) rowView.findViewById(R.id.artist_name_text_view);
-            ImageView thumbnailView = (ImageView) rowView.findViewById(R.id.artist_thumbnail_image_view);
-
             try {
+                // if the artist has thumbnail pictures for this entry
+                // get second to smallest thumbnail available to conserve data usage
                 if (thumbnailList.size() > 0) {
                     lastOne = thumbnailList.size() - 2;
                     url = thumbnailList.get(lastOne).url;
-                    Picasso.with(getContext()).load(url).into(thumbnailView);
+                    Picasso.with(getContext())
+                            .load(url)
+                            .placeholder(R.drawable.eigth_notes)
+                            .error(R.drawable.eigth_notes)
+                            .into(viewHolder.thumbnailView);
                 } else {
-                    Picasso.with(getContext()).load(R.drawable.eigth_notes).into(thumbnailView);
+                    // if there are no thumbnails, use a default local image
+                    Picasso.with(getContext())
+                            .load(R.drawable.eigth_notes)
+                            .placeholder(R.drawable.eigth_notes)
+                            .error(R.drawable.eigth_notes)
+                            .into(viewHolder.thumbnailView);
                 }
             } catch (Exception e) {
                 e.printStackTrace();
                 Log.v("ARTISTADAPTER", "what the hell caused THIS?: " + e);
             }
-
-            artistNameView.setText(artistName);
-            return rowView;
+            viewHolder.artistNameView.setText(artistName);
+            return convertView;
         }
     }
 
