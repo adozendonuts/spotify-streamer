@@ -1,11 +1,11 @@
 package com.runningoutofbreadth.spotifystreamer;
 
 import android.app.Activity;
-import android.support.v4.app.Fragment;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.KeyEvent;
@@ -65,7 +65,7 @@ public class SearchFragment extends Fragment {
         setRetainInstance(true);
     }
 
-    static class ViewHolder{
+    static class SearchViewHolder {
         TextView artistNameView;
         ImageView thumbnailView;
     }
@@ -82,19 +82,19 @@ public class SearchFragment extends Fragment {
         //override getView method
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
-            ViewHolder viewHolder;
+            SearchViewHolder searchViewHolder;
 
             //if there is no existing row view, inflate a new view
             if (convertView == null) {
                 convertView = LayoutInflater.from(parent.getContext())
                         .inflate(R.layout.individual_artist, parent, false);
-                viewHolder = new ViewHolder();
-                viewHolder.artistNameView = (TextView) convertView.findViewById(R.id.artist_name_text_view);
-                viewHolder.thumbnailView = (ImageView) convertView.findViewById(R.id.artist_thumbnail_image_view);
-                convertView.setTag(viewHolder);
+                searchViewHolder = new SearchViewHolder();
+                searchViewHolder.artistNameView = (TextView) convertView.findViewById(R.id.artist_name_text_view);
+                searchViewHolder.thumbnailView = (ImageView) convertView.findViewById(R.id.artist_thumbnail_image_view);
+                convertView.setTag(searchViewHolder);
             } else {
                 // reuse "scrapview" with the same tag.
-                viewHolder = (ViewHolder) convertView.getTag();
+                searchViewHolder = (SearchViewHolder) convertView.getTag();
             }
 
             String artistName = items.get(position).name;
@@ -104,28 +104,28 @@ public class SearchFragment extends Fragment {
 
             try {
                 // if the artist has thumbnail pictures for this entry
-                // get second to smallest thumbnail available to conserve data usage
+                // get smallest thumbnail available to conserve data usage
                 if (thumbnailList.size() > 0) {
-                    lastOne = thumbnailList.size() - 2;
+                    lastOne = thumbnailList.size() - 1;
                     url = thumbnailList.get(lastOne).url;
                     Picasso.with(getContext())
                             .load(url)
                             .placeholder(R.drawable.eigth_notes)
                             .error(R.drawable.eigth_notes)
-                            .into(viewHolder.thumbnailView);
+                            .into(searchViewHolder.thumbnailView);
                 } else {
                     // if there are no thumbnails, use a default local image
                     Picasso.with(getContext())
                             .load(R.drawable.eigth_notes)
                             .placeholder(R.drawable.eigth_notes)
                             .error(R.drawable.eigth_notes)
-                            .into(viewHolder.thumbnailView);
+                            .into(searchViewHolder.thumbnailView);
                 }
             } catch (Exception e) {
                 e.printStackTrace();
                 Log.v("ARTISTADAPTER", "what the hell caused THIS?: " + e);
             }
-            viewHolder.artistNameView.setText(artistName);
+            searchViewHolder.artistNameView.setText(artistName);
             return convertView;
         }
     }
@@ -134,6 +134,9 @@ public class SearchFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+
+        final ConnectivityManager cm = (ConnectivityManager) getActivity()
+                .getSystemService(Context.CONNECTIVITY_SERVICE);
 
         final View rootView = inflater.inflate(R.layout.fragment_search, container, false);
 
@@ -144,14 +147,25 @@ public class SearchFragment extends Fragment {
 
         //instantiate listview. onClick, talk to MainActivity
         final ListView list = (ListView) rootView.findViewById(R.id.artist_list_view);
+
+
         list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                String artistId = mArtists.get(position).id;
-                String artistName = mArtists.get(position).name;
-                ((TopTenTracksCallback) getActivity()).onItemSelected(artistId, artistName);
+                //check if internet is connected. Toast if not.
+                if (cm.getActiveNetworkInfo() == null) {
+                    Toast toast = Toast.makeText(getActivity().getApplicationContext(),
+                            "No internet!", Toast.LENGTH_SHORT);
+                    toast.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
+                    toast.show();
+                } else {
+                    String artistId = mArtists.get(position).id;
+                    String artistName = mArtists.get(position).name;
+                    ((TopTenTracksCallback) getActivity()).onItemSelected(artistId, artistName);
+                }
             }
         });
+
 
         //once you hit enter key (done/next/etc.), Asynctask runs
         editText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
@@ -162,9 +176,6 @@ public class SearchFragment extends Fragment {
                 //runs once Done is pressed.
                 if (!search.isEmpty()) {
                     //check for internet connection
-                    ConnectivityManager cm = (ConnectivityManager) getActivity()
-                            .getSystemService(Context.CONNECTIVITY_SERVICE);
-
                     if (cm.getActiveNetworkInfo() == null) {
                         Toast toast = Toast.makeText(getActivity().getApplicationContext(),
                                 "No internet!", Toast.LENGTH_SHORT);

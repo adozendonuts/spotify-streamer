@@ -1,13 +1,15 @@
 package com.runningoutofbreadth.spotifystreamer;
 
-import android.support.v4.app.FragmentTransaction;
 import android.content.Context;
 import android.content.Intent;
+import android.net.ConnectivityManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,6 +18,7 @@ import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.squareup.picasso.Picasso;
 
@@ -58,42 +61,72 @@ public class TopTenTracksFragment extends Fragment {
 
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
-            View rowView = convertView;
-            if (rowView == null) {
-                LayoutInflater inflater = (LayoutInflater) this.getContext().getSystemService(
-                        Context.LAYOUT_INFLATER_SERVICE);
-                rowView = inflater.inflate(R.layout.individual_track, null);
+            TopTenViewHolder topTenViewHolder;
 
-                String trackTitle = tracks.get(position).name;
-                String album = tracks.get(position).album.name;
-                List<Image> albumImages = tracks.get(position).album.images;
-                int lastOne;
-                String url;
+            // if no existing view available to recycle, inflate a new one
+            if (convertView == null) {
+                convertView = LayoutInflater.from(parent.getContext())
+                        .inflate(R.layout.individual_track, parent, false);
 
-                TextView trackTitleView = (TextView) rowView.findViewById(R.id.track_title_text_view);
-                TextView albumTitleView = (TextView) rowView.findViewById(R.id.album_text_view);
-                ImageView albumImageView = (ImageView) rowView.findViewById(R.id.album_thumbnail);
+                topTenViewHolder = new TopTenViewHolder();
+                topTenViewHolder.trackTitleView = (TextView) convertView.findViewById(R.id.track_title_text_view);
+                topTenViewHolder.albumTitleView = (TextView) convertView.findViewById(R.id.album_text_view);
+                topTenViewHolder.albumImageView = (ImageView) convertView.findViewById(R.id.album_thumbnail);
+                convertView.setTag(topTenViewHolder);
+            } else {
+                topTenViewHolder = (TopTenViewHolder) convertView.getTag();
+            }
 
-                try {
+            String trackTitle = tracks.get(position).name;
+            String album = tracks.get(position).album.name;
+            List<Image> albumImages = tracks.get(position).album.images;
+            int lastOne;
+            String url;
+
+            try {                    //check for internet connection
+                ConnectivityManager cm = (ConnectivityManager) getActivity()
+                        .getSystemService(Context.CONNECTIVITY_SERVICE);
+                Log.v("CONNECTIVITY", "let's hope we only see this message 10 times");
+
+                if (cm.getActiveNetworkInfo() == null) {
+                    Toast toast = Toast.makeText(getActivity().getApplicationContext(),
+                            "No internet!", Toast.LENGTH_SHORT);
+                    toast.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
+                    toast.show();
+                } else {
+                    // if the album item contains pictures
+                    // get smallest image available to conserve data usage
                     if (albumImages.size() > 0) {
                         lastOne = albumImages.size() - 1;
                         url = albumImages.get(lastOne).url;
+                        Picasso.with(getContext())
+                                .load(url)
+                                .placeholder(R.drawable.eigth_notes)
+                                .error(R.drawable.eigth_notes)
+                                .into(topTenViewHolder.albumImageView);
                     } else {
-                        url = "";
-                        albumImageView.setImageResource(R.drawable.eigth_notes);
+                        // if there are no thumbnails, use a default local image
+                        Picasso.with(getContext())
+                                .load(R.drawable.eigth_notes)
+                                .placeholder(R.drawable.eigth_notes)
+                                .error(R.drawable.eigth_notes)
+                                .into(topTenViewHolder.albumImageView);
                     }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    url = "";
-                    Log.v("ARTIST TRACKS LOGGING", "what the hell caused THIS?: " + e);
                 }
-
-                Picasso.with(getContext()).load(url).into(albumImageView);
-                trackTitleView.setText(trackTitle);
-                albumTitleView.setText(album);
+            } catch (Exception e) {
+                e.printStackTrace();
+                Log.v("ARTIST TRACKS LOGGING", "what the hell caused THIS?: " + e);
             }
-            return rowView;
+            topTenViewHolder.trackTitleView.setText(trackTitle);
+            topTenViewHolder.albumTitleView.setText(album);
+            return convertView;
         }
+    }
+
+    static class TopTenViewHolder {
+        TextView trackTitleView;
+        TextView albumTitleView;
+        ImageView albumImageView;
     }
 
     @Override
