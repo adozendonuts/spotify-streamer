@@ -40,7 +40,7 @@ public class SearchFragment extends Fragment {
     private ArtistAdapter mArtistAdapter;
     TopTenTracksCallback mTopTenTracksCallback;
     private String search;
-    private List<Artist> mArtists = new ArrayList<Artist>();
+    private List<Artist> mArtists = new ArrayList<>();
 
     public SearchFragment() {
     }
@@ -99,7 +99,7 @@ public class SearchFragment extends Fragment {
 
             String artistName = items.get(position).name;
             List<Image> thumbnailList = items.get(position).images;
-            int lastOne = 0;
+            int lastOne;
             String url;
 
             try {
@@ -135,7 +135,6 @@ public class SearchFragment extends Fragment {
 
         final ConnectivityManager cm = (ConnectivityManager) getActivity()
                 .getSystemService(Context.CONNECTIVITY_SERVICE);
-
         final View rootView = inflater.inflate(R.layout.fragment_search, container, false);
 
         //search field on top of screen, made so that hitting Next runs search
@@ -145,8 +144,6 @@ public class SearchFragment extends Fragment {
 
         //instantiate listview. onClick, talk to MainActivity
         final ListView list = (ListView) rootView.findViewById(R.id.artist_list_view);
-
-
         list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -205,18 +202,18 @@ public class SearchFragment extends Fragment {
         private final String LOG_TAG = FetchArtistData.class.getSimpleName();
         private Toast toast;
 
+        // since we only search for one thing, we pass in the first string in the array
         protected List<Artist> doInBackground(String... params) {
-
             SpotifyApi api = new SpotifyApi();
             SpotifyService spotify = api.getService();
-            ArtistsPager artistsPager = spotify.searchArtists(search);
+            ArtistsPager artistsPager = spotify.searchArtists(params[0]);
 
             return artistsPager.artists.items;
         }
 
         @Override
         protected void onPostExecute(List<Artist> result) {
-            //takes all nested String arrays and adds them to mArtistAdapter
+            //takes all Artist items and adds them to mArtistAdapter
             if (result != null && !result.isEmpty()) {
                 if (toast != null) {
                     toast.cancel();
@@ -234,7 +231,6 @@ public class SearchFragment extends Fragment {
                         Toast.LENGTH_LONG);
                 toast.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
                 toast.show();
-
             }
         }
     }

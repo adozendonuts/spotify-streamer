@@ -31,6 +31,7 @@ import kaaes.spotify.webapi.android.SpotifyService;
 import kaaes.spotify.webapi.android.models.Image;
 import kaaes.spotify.webapi.android.models.Track;
 import kaaes.spotify.webapi.android.models.Tracks;
+import retrofit.RetrofitError;
 
 
 /**
@@ -84,11 +85,7 @@ public class TopTenTracksFragment extends Fragment {
 
             try {
                 //check for internet connection
-                ConnectivityManager cm = (ConnectivityManager) getActivity()
-                        .getSystemService(Context.CONNECTIVITY_SERVICE);
-                Log.v("CONNECTIVITY", "let's hope we only see this message 10 times");
-
-                if (cm.getActiveNetworkInfo() == null) {
+                if (hasInternet() == false) {
                     Toast toast = Toast.makeText(getActivity().getApplicationContext(),
                             "No internet!", Toast.LENGTH_SHORT);
                     toast.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
@@ -134,27 +131,41 @@ public class TopTenTracksFragment extends Fragment {
             mArtistId = savedInstanceState.getString(ARTIST_ID_KEY);
             mArtistName = savedInstanceState.getString(ARTIST_NAME_KEY);
             mTwoPane = savedInstanceState.getBoolean(PANE_KEY);
+        } else {
+            Bundle arguments = getArguments();
+            if (arguments != null) {
+                mArtistId = arguments.getString(ARTIST_ID_KEY);
+                mArtistName = arguments.getString(ARTIST_NAME_KEY);
+                mTwoPane = arguments.getBoolean(PANE_KEY);
+            }
         }
     }
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
         outState.putString(ARTIST_ID_KEY, mArtistId);
-        outState.putString(ARTIST_NAME_KEY,mArtistName);
-        outState.putBoolean(PANE_KEY,mTwoPane);
+        outState.putString(ARTIST_NAME_KEY, mArtistName);
+        outState.putBoolean(PANE_KEY, mTwoPane);
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        final String LOG_TAG = TopTenTracksFragment.class.getSimpleName();
 
         Intent intent = getActivity().getIntent();
         if (intent != null && intent.hasExtra(ARTIST_ID_KEY)) {
             mArtistId = intent.getStringExtra(ARTIST_ID_KEY);
             mArtistName = intent.getStringExtra(ARTIST_NAME_KEY);
+        }
+
+        if (mArtistId != null) {
             FetchTracks fetchTracks = new FetchTracks();
             fetchTracks.execute(mArtistId);
+        } else {
+            Log.v(LOG_TAG, "Missing Artist ID" + mArtistId);
         }
+
 
         final View rootView = inflater.inflate(R.layout.fragment_top_tracks, container, false);
 
@@ -191,36 +202,61 @@ public class TopTenTracksFragment extends Fragment {
                     .addToBackStack(null)
                     .commit();
         }
-
     }
 
-public class FetchTracks extends AsyncTask<String, Void, Tracks> {
-    private final String LOG_TAG = FetchTracks.class.getSimpleName();
+    public class FetchTracks extends AsyncTask<String, Void, Tracks> {
+        private final String LOG_TAG = FetchTracks.class.getSimpleName();
+        private Toast toast;
 
-    protected Tracks doInBackground(String... params) {
-        SpotifyApi api = new SpotifyApi();
-        SpotifyService spotify = api.getService();
+        protected Tracks doInBackground(String... params) {
+            SpotifyApi api = new SpotifyApi();
+            SpotifyService spotify = api.getService();
 
-        try {
-            Log.v(LOG_TAG, spotify.getArtistTopTrack(mArtistId, Locale.getDefault().getCountry()).tracks.toString());
-            return spotify.getArtistTopTrack(mArtistId, Locale.getDefault().getCountry());
-        } catch (NullPointerException e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
-
-    @Override
-    public void onPostExecute(Tracks result) {
-        tracksAdapter.clear();
-        if (result.tracks != null) {
-            for (Track each : result.tracks) {
-                tracksAdapter.add(each);
+            if (hasInternet() == true) {
+                try {
+                    return spotify.getArtistTopTrack(mArtistId, Locale.getDefault().getCountry());
+                } catch (NullPointerException e) {
+                    e.printStackTrace();
+                    return null;
+                } catch (RetrofitError r) {
+                    r.printStackTrace();
+                    return null;
+                }
+            } else {
+                return null;
             }
-            mTracklist = result;
-        } else {
-            Log.v(LOG_TAG, result.tracks.toString());
+        }
+
+        @Override
+        public void onPostExecute(Tracks result) {
+            tracksAdapter.clear();
+            if (result != null && result.tracks != null) {
+                if (toast != null) {
+                    toast.cancel();
+                }
+                for (Track each : result.tracks) {
+                    tracksAdapter.add(each);
+                }
+                mTracklist = result;
+            } else {
+                toast = Toast.makeText(getActivity()
+                                .getApplicationContext(),
+                        "No results.\n" +
+                                "It seems this artist\n" +
+                                "does not have any tracks.",
+                        Toast.LENGTH_LONG);
+                toast.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
+                toast.show();
+            }
         }
     }
-}
+
+    private Boolean hasInternet() {
+        ConnectivityManager cm = (ConnectivityManager) getActivity()
+                .getSystemService(Context.CONNECTIVITY_SERVICE);
+        if (cm.getActiveNetworkInfo() == null) {
+            return false;
+        }
+        return true;
+    }
 }
