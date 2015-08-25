@@ -67,7 +67,6 @@ public class TopTenTracksFragment extends Fragment {
             if (convertView == null) {
                 convertView = LayoutInflater.from(parent.getContext())
                         .inflate(R.layout.individual_track, parent, false);
-
                 topTenViewHolder = new TopTenViewHolder();
                 topTenViewHolder.trackTitleView = (TextView) convertView.findViewById(R.id.track_title_text_view);
                 topTenViewHolder.albumTitleView = (TextView) convertView.findViewById(R.id.album_text_view);
@@ -83,7 +82,8 @@ public class TopTenTracksFragment extends Fragment {
             int lastOne;
             String url;
 
-            try {                    //check for internet connection
+            try {
+                //check for internet connection
                 ConnectivityManager cm = (ConnectivityManager) getActivity()
                         .getSystemService(Context.CONNECTIVITY_SERVICE);
                 Log.v("CONNECTIVITY", "let's hope we only see this message 10 times");
@@ -108,8 +108,6 @@ public class TopTenTracksFragment extends Fragment {
                         // if there are no thumbnails, use a default local image
                         Picasso.with(getContext())
                                 .load(R.drawable.eigth_notes)
-                                .placeholder(R.drawable.eigth_notes)
-                                .error(R.drawable.eigth_notes)
                                 .into(topTenViewHolder.albumImageView);
                     }
                 }
@@ -132,21 +130,24 @@ public class TopTenTracksFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setRetainInstance(true);
+        if (savedInstanceState != null) {
+            mArtistId = savedInstanceState.getString(ARTIST_ID_KEY);
+            mArtistName = savedInstanceState.getString(ARTIST_NAME_KEY);
+            mTwoPane = savedInstanceState.getBoolean(PANE_KEY);
+        }
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        outState.putString(ARTIST_ID_KEY, mArtistId);
+        outState.putString(ARTIST_NAME_KEY,mArtistName);
+        outState.putBoolean(PANE_KEY,mTwoPane);
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
-        Bundle arguments = getArguments();
-        if (arguments != null) {
-            mArtistId = arguments.getString(ARTIST_ID_KEY);
-            mArtistName = arguments.getString(ARTIST_NAME_KEY);
-            mTwoPane = arguments.getBoolean(PANE_KEY);
-            FetchTracks fetchTracks = new FetchTracks();
-            fetchTracks.execute(mArtistId);
-        }
         Intent intent = getActivity().getIntent();
         if (intent != null && intent.hasExtra(ARTIST_ID_KEY)) {
             mArtistId = intent.getStringExtra(ARTIST_ID_KEY);
@@ -167,7 +168,6 @@ public class TopTenTracksFragment extends Fragment {
                 args.putString(TrackPlayerFragment.ARTIST_NAME_KEY, mArtistName);
                 args.putInt(TrackPlayerFragment.POSITION_KEY, position);
                 args.putParcelable(TrackPlayerFragment.TRACK_LIST_KEY, mTracklist);
-//                args.putBoolean(TrackPlayerFragment.SIZE_KEY, mTwoPane);
 
                 showDialog(args);
             }
@@ -194,33 +194,33 @@ public class TopTenTracksFragment extends Fragment {
 
     }
 
-    public class FetchTracks extends AsyncTask<String, Void, Tracks> {
-        private final String LOG_TAG = FetchTracks.class.getSimpleName();
+public class FetchTracks extends AsyncTask<String, Void, Tracks> {
+    private final String LOG_TAG = FetchTracks.class.getSimpleName();
 
-        protected Tracks doInBackground(String... params) {
-            SpotifyApi api = new SpotifyApi();
-            SpotifyService spotify = api.getService();
+    protected Tracks doInBackground(String... params) {
+        SpotifyApi api = new SpotifyApi();
+        SpotifyService spotify = api.getService();
 
-            try {
-                Log.v(LOG_TAG, spotify.getArtistTopTrack(mArtistId, Locale.getDefault().getCountry()).tracks.toString());
-                return spotify.getArtistTopTrack(mArtistId, Locale.getDefault().getCountry());
-            } catch (NullPointerException e) {
-                e.printStackTrace();
-                return null;
-            }
-        }
-
-        @Override
-        public void onPostExecute(Tracks result) {
-            tracksAdapter.clear();
-            if (result.tracks != null) {
-                for (Track each : result.tracks) {
-                    tracksAdapter.add(each);
-                }
-                mTracklist = result;
-            } else {
-                Log.v(LOG_TAG, result.tracks.toString());
-            }
+        try {
+            Log.v(LOG_TAG, spotify.getArtistTopTrack(mArtistId, Locale.getDefault().getCountry()).tracks.toString());
+            return spotify.getArtistTopTrack(mArtistId, Locale.getDefault().getCountry());
+        } catch (NullPointerException e) {
+            e.printStackTrace();
+            return null;
         }
     }
+
+    @Override
+    public void onPostExecute(Tracks result) {
+        tracksAdapter.clear();
+        if (result.tracks != null) {
+            for (Track each : result.tracks) {
+                tracksAdapter.add(each);
+            }
+            mTracklist = result;
+        } else {
+            Log.v(LOG_TAG, result.tracks.toString());
+        }
+    }
+}
 }

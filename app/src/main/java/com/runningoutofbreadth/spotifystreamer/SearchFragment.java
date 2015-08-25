@@ -117,8 +117,6 @@ public class SearchFragment extends Fragment {
                     // if there are no thumbnails, use a default local image
                     Picasso.with(getContext())
                             .load(R.drawable.eigth_notes)
-                            .placeholder(R.drawable.eigth_notes)
-                            .error(R.drawable.eigth_notes)
                             .into(searchViewHolder.thumbnailView);
                 }
             } catch (Exception e) {
@@ -159,6 +157,8 @@ public class SearchFragment extends Fragment {
                     toast.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
                     toast.show();
                 } else {
+                    // send info to mainactivity and have the onItemSelected method handle
+                    // whether it should open a new activity or load a fragment
                     String artistId = mArtists.get(position).id;
                     String artistName = mArtists.get(position).name;
                     ((TopTenTracksCallback) getActivity()).onItemSelected(artistId, artistName);

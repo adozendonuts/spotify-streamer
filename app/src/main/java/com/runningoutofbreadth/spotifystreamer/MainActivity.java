@@ -31,7 +31,6 @@ public class MainActivity extends AppCompatActivity implements SearchFragment.To
     @Override
     public void onItemSelected(String artistId, String artistName) {
         if (mTwoPane) {
-
             Bundle args = new Bundle();
             args.putString(TopTenTracksFragment.ARTIST_ID_KEY, artistId);
             args.putString(TopTenTracksFragment.ARTIST_NAME_KEY, artistName);
