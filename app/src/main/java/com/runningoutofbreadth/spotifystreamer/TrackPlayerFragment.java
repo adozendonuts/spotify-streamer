@@ -18,7 +18,7 @@ import kaaes.spotify.webapi.android.models.Tracks;
  * A placeholder fragment containing a simple view.
  */
 public class TrackPlayerFragment extends DialogFragment {
-    static final String TRACK_LIST_KEY = "TRACKLIST";
+    static final String TRACK_LIST_KEY = "TRACKLIST_KEY";
     static final String POSITION_KEY = "POSITION";
     static final String ARTIST_NAME_KEY = "ARTIST";
     static final String TRACK_URL_KEY = "URL";
@@ -69,7 +69,6 @@ public class TrackPlayerFragment extends DialogFragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-
         if (savedInstanceState == null) {
             Bundle args = getArguments();
             if (args != null) {
@@ -101,7 +100,6 @@ public class TrackPlayerFragment extends DialogFragment {
     }
 
     //helper method for updating all views for dialogfragment and loading next track
-
 //    public void updateViews(TextView artistTextView, TextView albumTextView,
 //                            ImageView albumImageView, TextView trackTextView, int position) {
 //        mTrackName = mTrackList.tracks.get(position).name;

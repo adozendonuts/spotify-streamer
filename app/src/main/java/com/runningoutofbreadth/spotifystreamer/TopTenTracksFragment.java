@@ -127,6 +127,7 @@ public class TopTenTracksFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setRetainInstance(true);
         if (savedInstanceState != null) {
             mArtistId = savedInstanceState.getString(ARTIST_ID_KEY);
             mArtistName = savedInstanceState.getString(ARTIST_NAME_KEY);
@@ -143,9 +144,10 @@ public class TopTenTracksFragment extends Fragment {
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
-        outState.putString(ARTIST_ID_KEY, mArtistId);
-        outState.putString(ARTIST_NAME_KEY, mArtistName);
-        outState.putBoolean(PANE_KEY, mTwoPane);
+
+//        outState.putString(ARTIST_ID_KEY, mArtistId);
+//        outState.putString(ARTIST_NAME_KEY, mArtistName);
+//        outState.putBoolean(PANE_KEY, mTwoPane);
     }
 
     @Override
@@ -159,7 +161,7 @@ public class TopTenTracksFragment extends Fragment {
             mArtistName = intent.getStringExtra(ARTIST_NAME_KEY);
         }
 
-        if (mArtistId != null) {
+        if (savedInstanceState == null && mArtistId != null) {
             FetchTracks fetchTracks = new FetchTracks();
             fetchTracks.execute(mArtistId);
         } else {
@@ -179,8 +181,7 @@ public class TopTenTracksFragment extends Fragment {
                 args.putString(TrackPlayerFragment.ARTIST_NAME_KEY, mArtistName);
                 args.putInt(TrackPlayerFragment.POSITION_KEY, position);
                 args.putParcelable(TrackPlayerFragment.TRACK_LIST_KEY, mTracklist);
-
-                showDialog(args);
+                showPlayer(args);
             }
         });
 
@@ -188,20 +189,37 @@ public class TopTenTracksFragment extends Fragment {
         return rootView;
     }
 
-    public void showDialog(Bundle args) {
+    // loads the dialogfragment that contains the player UI
+    // starts mediaplayerservice
+    public void showPlayer(Bundle args) {
         TrackPlayerFragment trackPlayerFragment = new TrackPlayerFragment();
         FragmentManager fragmentManager = getFragmentManager();
         trackPlayerFragment.setArguments(args);
 
         if (mTwoPane) {
+            // show small dialog
             trackPlayerFragment.show(fragmentManager, PLAYERFRAGMENT_TAG);
         } else {
+            // open fragment fullscreen
             FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
             fragmentTransaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
             fragmentTransaction.add(android.R.id.content, trackPlayerFragment)
                     .addToBackStack(null)
                     .commit();
         }
+        Intent intent = new Intent(getActivity(), com.runningoutofbreadth.spotifystreamer.MediaPlayerService.class);
+        intent.putExtras(args);
+        getActivity().startService(intent);
+    }
+
+    // determines whether or not an internet connection exists
+    private Boolean hasInternet() {
+        ConnectivityManager cm = (ConnectivityManager) getActivity()
+                .getSystemService(Context.CONNECTIVITY_SERVICE);
+        if (cm.getActiveNetworkInfo() == null) {
+            return false;
+        }
+        return true;
     }
 
     public class FetchTracks extends AsyncTask<String, Void, Tracks> {
@@ -249,14 +267,5 @@ public class TopTenTracksFragment extends Fragment {
                 toast.show();
             }
         }
-    }
-
-    private Boolean hasInternet() {
-        ConnectivityManager cm = (ConnectivityManager) getActivity()
-                .getSystemService(Context.CONNECTIVITY_SERVICE);
-        if (cm.getActiveNetworkInfo() == null) {
-            return false;
-        }
-        return true;
     }
 }

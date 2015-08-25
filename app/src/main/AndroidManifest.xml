@@ -32,6 +32,7 @@
             android:name=".TrackPlayerActivity"
             android:label="@string/title_activity_track_player" >
         </activity>
+        <service android:name="com.runningoutofbreadth.spotifystreamer.MediaPlayerService"></service>
     </application>
 
 </manifest>
