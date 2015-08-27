@@ -4,6 +4,7 @@ import android.app.Service;
 import android.content.Intent;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
+import android.os.Binder;
 import android.os.IBinder;
 import android.util.Log;
 import android.widget.Toast;
@@ -17,21 +18,17 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnPrepare
     MediaPlayer mPlayer;
     private Tracks mTrackList;
     private int mPosition;
+    private String mTrackPreviewUrl;
+    private final IBinder mBinder = new MusicBinder();
 
-    @Override
-    public void onCreate() {
-        // TODO: Start up the thread running the service.
-        Log.v(LOG_TAG, "THE SERVICE HAS BEEN CREATED!");
-    }
-
+    // this runs when bindService is called in the fragment
+    // gets all of the extras
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.v(LOG_TAG, "THE SERVICE HAS STARTED!");
-        //TODO do something useful
         if (intent.getExtras() != null) {
             mPosition = intent.getExtras().getInt(TrackPlayerFragment.POSITION_KEY);
             mTrackList = intent.getExtras().getParcelable(TrackPlayerFragment.TRACK_LIST_KEY);
-            String mTrackPreviewUrl = mTrackList.tracks.get(mPosition).preview_url;
+            mTrackPreviewUrl = mTrackList.tracks.get(mPosition).preview_url;
             mPlayer = new MediaPlayer();
             mPlayer.setOnPreparedListener(this);
             mPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
@@ -45,6 +42,19 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnPrepare
         return Service.START_NOT_STICKY;
     }
 
+
+    @Override
+    public void onCreate() {
+        // TODO: Start up the thread running the service.
+        Log.v(LOG_TAG, "THE SERVICE HAS BEEN CREATED!");
+    }
+
+    public class MusicBinder extends Binder {
+        MediaPlayerService getService() {
+            return MediaPlayerService.this;
+        }
+    }
+
     @Override
     public void onPrepared(MediaPlayer mediaPlayer) {
         Log.v(LOG_TAG, "THE MEDIAPLAYER IS PREPARED!");
@@ -54,8 +64,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnPrepare
 
     @Override
     public IBinder onBind(Intent intent) {
-        //TODO for communication return IBinder implementation
-        return null;
+        return mBinder;
     }
 
     @Override
@@ -64,4 +73,47 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnPrepare
         Toast.makeText(this, "service done", Toast.LENGTH_SHORT).show();
         mPlayer.stop();
     }
+
+    //methods for client
+    public void play() {
+        mPlayer.start();
+    }
+
+    public void pause() {
+        mPlayer.pause();
+    }
+
+    public void stop() {
+        mPlayer.stop();
+    }
+
+    public void next() {
+        //talk to bound service to push
+        mPlayer.reset();
+        if (mPosition < mTrackList.tracks.size()-1) {
+            mPosition += 1;
+            mTrackPreviewUrl = mTrackList.tracks.get(mPosition).preview_url;
+            try {
+                mPlayer.setDataSource(mTrackPreviewUrl);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            mPlayer.prepareAsync();
+        }
+    }
+
+    public void previous() {
+        mPlayer.reset();
+        if (mPosition != 0) {
+            mPosition -= 1;
+            mTrackPreviewUrl = mTrackList.tracks.get(mPosition).preview_url;
+            try {
+                mPlayer.setDataSource(mTrackPreviewUrl);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            mPlayer.prepareAsync();
+        }
+    }
+
 }

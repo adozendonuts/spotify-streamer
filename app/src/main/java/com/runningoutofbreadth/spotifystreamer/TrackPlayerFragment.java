@@ -1,8 +1,14 @@
 package com.runningoutofbreadth.spotifystreamer;
 
 import android.app.Dialog;
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
+import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.support.v4.app.DialogFragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -34,12 +40,36 @@ public class TrackPlayerFragment extends DialogFragment {
     private Tracks mTrackList;
     private int mPosition;
     private int mCurrentPosition;
+    MediaPlayerService mService;
+    boolean mBound;
+
 
     public TrackPlayerFragment() {
     }
 
+    protected ServiceConnection mConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            mService = ((MediaPlayerService.MusicBinder) service).getService();
+            mBound = true;
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            mBound = false;
+        }
+    };
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        Intent intent = new Intent(getActivity(), MediaPlayerService.class);
+        getActivity().bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
+    }
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        setRetainInstance(true);
         if (savedInstanceState != null) {
             mPosition = savedInstanceState.getInt(POSITION_KEY);
             mTrackPreviewUrl = savedInstanceState.getString(TRACK_URL_KEY);
@@ -54,7 +84,15 @@ public class TrackPlayerFragment extends DialogFragment {
     }
 
     @Override
+    public void onDestroyView() {
+        if (getDialog() != null && getRetainInstance())
+            getDialog().setDismissMessage(null);
+        super.onDestroyView();
+    }
+
+    @Override
     public void onSaveInstanceState(Bundle savedInstanceState) {
+        super.onSaveInstanceState(savedInstanceState);
         savedInstanceState.putInt(POSITION_KEY, mPosition);
         savedInstanceState.putParcelable(TRACK_LIST_KEY, mTrackList);
         savedInstanceState.putString(ARTIST_NAME_KEY, mTrackArtist);
@@ -63,7 +101,6 @@ public class TrackPlayerFragment extends DialogFragment {
         savedInstanceState.putString(ALBUM_COVER_KEY, mTrackAlbumCover);
         savedInstanceState.putString(TRACK_NAME_KEY, mTrackName);
         savedInstanceState.putInt(CURRENT_POSITION_KEY, mCurrentPosition);
-        super.onSaveInstanceState(savedInstanceState);
     }
 
     @Override
@@ -96,34 +133,79 @@ public class TrackPlayerFragment extends DialogFragment {
         final TextView trackTextView = (TextView) rootView.findViewById(R.id.player_track_name);
         trackTextView.setText(mTrackName);
 
+        final ImageView playButton = (ImageView) rootView.findViewById(R.id.player_play_pause_button);
+        playButton.setOnClickListener(
+                new View.OnClickListener() {
+                    public void onClick(View v) {
+                        //TODO edit this
+                        if (mBound) {
+                            Log.v("MSERVICE", "THIS IS THE VALUE OF mService" + mService);
+                            if (mService.mPlayer.isPlaying()) {
+                                mService.pause();
+                                playButton.setImageResource(android.R.drawable.ic_media_play);
+                            } else {
+                                mService.play();
+                                playButton.setImageResource(android.R.drawable.ic_media_pause);
+                            }
+                        }
+                    }
+                }
+        );
+
+        final ImageView prevButton = (ImageView) rootView.findViewById(R.id.player_track_previous_button);
+        prevButton.setOnClickListener(
+                new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        mService.previous();
+                        if (mPosition != 0) {
+                            mPosition -= 1;
+                            updateViews(artistTextView, albumTextView, albumImageView, trackTextView, mPosition);
+                        }
+                    }
+                }
+
+        );
+
+        final ImageView nextButton = (ImageView) rootView.findViewById(R.id.player_track_next_button);
+        nextButton.setOnClickListener(
+                new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        mService.next();
+                        if (mPosition != mTrackList.tracks.size() - 1) {
+                            mPosition += 1;
+                            updateViews(artistTextView, albumTextView, albumImageView, trackTextView, mPosition);
+                        }
+                    }
+                }
+        );
         return rootView;
     }
 
     //helper method for updating all views for dialogfragment and loading next track
-//    public void updateViews(TextView artistTextView, TextView albumTextView,
-//                            ImageView albumImageView, TextView trackTextView, int position) {
-//        mTrackName = mTrackList.tracks.get(position).name;
-//        mTrackAlbum = mTrackList.tracks.get(position).album.name;
-//        mTrackAlbumCover = mTrackList.tracks.get(position).album.images.get(0).url;
-//        mTrackPreviewUrl = mTrackList.tracks.get(mPosition).preview_url;
-//        artistTextView.setText(mTrackArtist);
-//        albumTextView.setText(mTrackAlbum);
-//        picassoLoader(mTrackAlbumCover, albumImageView);
-//        trackTextView.setText(mTrackName);}
-
-
-        public void picassoLoader(String stringUrl, ImageView imageView) {
-            Picasso.with(getActivity().getApplicationContext()).load(stringUrl)
-                    .resize(300, 300)
-                    .centerCrop()
-                    .into(imageView);
-        }
-
-        @Override
-        public Dialog onCreateDialog(Bundle savedInstanceState) {
-            Dialog dialog = super.onCreateDialog(savedInstanceState);
-            dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-            return dialog;
-        }
-
+    public void updateViews(TextView artistTextView, TextView albumTextView,
+                            ImageView albumImageView, TextView trackTextView, int position) {
+        mTrackName = mTrackList.tracks.get(position).name;
+        mTrackAlbum = mTrackList.tracks.get(position).album.name;
+        mTrackAlbumCover = mTrackList.tracks.get(position).album.images.get(0).url;
+        artistTextView.setText(mTrackArtist);
+        albumTextView.setText(mTrackAlbum);
+        picassoLoader(mTrackAlbumCover, albumImageView);
+        trackTextView.setText(mTrackName);
     }
+
+    public void picassoLoader(String stringUrl, ImageView imageView) {
+        Picasso.with(getActivity().getApplicationContext()).load(stringUrl)
+                .resize(300, 300)
+                .centerCrop()
+                .into(imageView);
+    }
+
+    @Override
+    public Dialog onCreateDialog(Bundle savedInstanceState) {
+        Dialog dialog = super.onCreateDialog(savedInstanceState);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        return dialog;
+    }
+}

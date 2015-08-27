@@ -112,7 +112,7 @@
                 android:layout_centerHorizontal="true"
                 android:layout_centerVertical="true"
                 android:padding="4dp"
-                android:src="@android:drawable/ic_media_play" />
+                android:src="@android:drawable/ic_media_pause" />
 
             <ImageView
                 android:id="@+id/player_track_next_button"

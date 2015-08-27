@@ -71,4 +71,5 @@ public class MainActivity extends AppCompatActivity implements SearchFragment.To
 
         return super.onOptionsItemSelected(item);
     }
+
 }

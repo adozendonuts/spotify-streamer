@@ -1,11 +1,10 @@
 package com.runningoutofbreadth.spotifystreamer;
 
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
-import android.view.MenuItem;
 
-public class TrackPlayerActivity extends AppCompatActivity {
+public class TrackPlayerActivity extends AppCompatActivity{
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -21,19 +20,39 @@ public class TrackPlayerActivity extends AppCompatActivity {
         return true;
     }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
-    }
-
+//    @Override
+//    public void onStart() {
+//        super.onStart();
+//        // Bind to MediaPlayerService
+//        Intent intent = new Intent(this, MediaPlayerService.class);
+//        bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
+//    }
+//
+//    @Override
+//    protected void onStop() {
+//        super.onStop();
+//        // Unbind from the service
+//        if (mBound) {
+//            unbindService(mConnection);
+//            mBound = false;
+//        }
+//    }
+//
+//    /** Defines callbacks for service binding, passed to bindService() */
+//    private ServiceConnection mConnection = new ServiceConnection() {
+//
+//        @Override
+//        public void onServiceConnected(ComponentName className,
+//                                       IBinder service) {
+//            // We've bound to LocalService, cast the IBinder and get LocalService instance
+//            LocalBinder binder = (LocalBinder) service;
+//            mService = binder.getService();
+//            mBound = true;
+//        }
+//
+//        @Override
+//        public void onServiceDisconnected(ComponentName arg0) {
+//            mBound = false;
+//        }
+//    };
 }
