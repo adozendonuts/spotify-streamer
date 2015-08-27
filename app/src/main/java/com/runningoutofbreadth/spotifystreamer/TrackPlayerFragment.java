@@ -181,7 +181,7 @@ public class TrackPlayerFragment extends DialogFragment {
 
                     @Override
                     public void onStopTrackingTouch(SeekBar seekBar) {
-                        mHandler.postDelayed(updateSeekBar, 1000);
+                        mHandler.postDelayed(updateSeekBar, 100);
                     }
                 }
 
@@ -203,7 +203,7 @@ public class TrackPlayerFragment extends DialogFragment {
                             } else {
                                 mService.play();
                                 mPlayButton.setImageResource(android.R.drawable.ic_media_pause);
-                                mHandler.postDelayed(updateSeekBar, 1000);
+                                mHandler.postDelayed(updateSeekBar, 100);
                             }
                         }
                     }
@@ -248,8 +248,7 @@ public class TrackPlayerFragment extends DialogFragment {
                             TextView currentTimeTextView,
                             TextView durationTextView, int position) {
         String currentTimeString = String.format("%01d:%02d", 0, 0);
-        String durationString = String.format("%01d:%02d",
-                0, mTrackList.tracks.get(position).duration_ms / 1000);
+        String durationString = String.format("%01d:%02d", 0, 30);
 
         mTrackName = mTrackList.tracks.get(position).name;
         mTrackAlbum = mTrackList.tracks.get(position).album.name;
@@ -313,7 +312,7 @@ public class TrackPlayerFragment extends DialogFragment {
 
                 //run this at 1 second intervals, assign mCurrentPosition for saved state
                 mCurrentPosition = currentPosition;
-                mHandler.postDelayed(this, 1000);
+                mHandler.postDelayed(this, 100);
             } else {
                 Log.v("MPLAYER THREAD", "mediaplayer isn't on. We can't get this party started...");
             }

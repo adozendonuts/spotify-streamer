@@ -73,7 +73,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnPrepare
         mediaPlayer.start();
         // change play button back to pause on song playback start
         TrackPlayerFragment.mPlayButton.setImageResource(android.R.drawable.ic_media_pause);
-        handler.postDelayed(TrackPlayerFragment.updateSeekBar, 1000);
+        handler.postDelayed(TrackPlayerFragment.updateSeekBar, 100);
         Log.v(LOG_TAG, "THE MEDIAPLAYER HAS STARTED!");
     }
 
