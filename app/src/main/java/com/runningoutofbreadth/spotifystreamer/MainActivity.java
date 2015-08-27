@@ -7,7 +7,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 
 
-public class MainActivity extends AppCompatActivity implements SearchFragment.TopTenTracksCallback{
+public class MainActivity extends AppCompatActivity implements SearchFragment.TopTenTracksCallback {
     String TRACKSFRAGMENT_TAG = "TFTAG";
     boolean mTwoPane;
 
@@ -68,8 +68,6 @@ public class MainActivity extends AppCompatActivity implements SearchFragment.To
         if (id == R.id.action_settings) {
             return true;
         }
-
         return super.onOptionsItemSelected(item);
     }
-
 }

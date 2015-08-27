@@ -32,6 +32,7 @@ public class TrackPlayerFragment extends DialogFragment {
     static final String ALBUM_COVER_KEY = "COVER";
     static final String TRACK_NAME_KEY = "TRACK";
     static final String CURRENT_POSITION_KEY = "CURRENTTIME";
+    static final String BOUND_KEY = "BOUND";
     private String mTrackPreviewUrl;
     private String mTrackArtist;
     private String mTrackAlbum;
@@ -40,9 +41,9 @@ public class TrackPlayerFragment extends DialogFragment {
     private Tracks mTrackList;
     private int mPosition;
     private int mCurrentPosition;
-    MediaPlayerService mService;
-    boolean mBound;
-
+    protected MediaPlayerService mService;
+    protected boolean mBound;
+    Bundle mArgs;
 
     public TrackPlayerFragment() {
     }
@@ -61,10 +62,26 @@ public class TrackPlayerFragment extends DialogFragment {
     };
 
     @Override
-    public void onStart() {
-        super.onStart();
-        Intent intent = new Intent(getActivity(), MediaPlayerService.class);
-        getActivity().bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
+    public void onResume() {
+        super.onResume();
+        if (!mBound) {
+            Log.v("MBOUND", "MBOUND ON RESUME IS FALSE!!!" + mBound);
+            Intent intent = new Intent(getActivity(), MediaPlayerService.class);
+            intent.putExtras(mArgs);
+            try{
+                getActivity().startService(intent);
+                getActivity().bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
+            }catch(Exception e) {
+                Log.v("SERVICECONNECTION LEAK", "WHY");
+            }
+        }
+    }
+
+    @Override
+    public void onDestroyView() {
+        if (getDialog() != null && getRetainInstance())
+            getDialog().setDismissMessage(null);
+        super.onDestroyView();
     }
 
     @Override
@@ -79,15 +96,10 @@ public class TrackPlayerFragment extends DialogFragment {
             mTrackName = savedInstanceState.getString(TRACK_NAME_KEY);
             mTrackList = savedInstanceState.getParcelable(TRACK_LIST_KEY);
             mCurrentPosition = savedInstanceState.getInt(CURRENT_POSITION_KEY);
+            mBound = savedInstanceState.getBoolean(BOUND_KEY);
+            Log.v("MBOUND", "VALUE OF MBOUND ON CREATE IS = " + mBound);
         }
         super.onCreate(savedInstanceState);
-    }
-
-    @Override
-    public void onDestroyView() {
-        if (getDialog() != null && getRetainInstance())
-            getDialog().setDismissMessage(null);
-        super.onDestroyView();
     }
 
     @Override
@@ -101,17 +113,19 @@ public class TrackPlayerFragment extends DialogFragment {
         savedInstanceState.putString(ALBUM_COVER_KEY, mTrackAlbumCover);
         savedInstanceState.putString(TRACK_NAME_KEY, mTrackName);
         savedInstanceState.putInt(CURRENT_POSITION_KEY, mCurrentPosition);
+        savedInstanceState.putBoolean(BOUND_KEY, mBound);
+        Log.v("MBOUND", "VALUE OF MBOUND ON SAVE IS = " + mBound);
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         if (savedInstanceState == null) {
-            Bundle args = getArguments();
-            if (args != null) {
-                mTrackList = args.getParcelable(TRACK_LIST_KEY);
-                mPosition = args.getInt(POSITION_KEY);
-                mTrackArtist = args.getString(ARTIST_NAME_KEY);
+            mArgs = getArguments();
+            if (mArgs != null) {
+                mTrackList = mArgs.getParcelable(TRACK_LIST_KEY);
+                mPosition = mArgs.getInt(POSITION_KEY);
+                mTrackArtist = mArgs.getString(ARTIST_NAME_KEY);
                 mTrackName = mTrackList.tracks.get(mPosition).name;
                 mTrackPreviewUrl = mTrackList.tracks.get(mPosition).preview_url;
                 mTrackAlbum = mTrackList.tracks.get(mPosition).album.name;
@@ -208,4 +222,5 @@ public class TrackPlayerFragment extends DialogFragment {
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         return dialog;
     }
+
 }

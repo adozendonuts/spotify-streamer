@@ -2,7 +2,6 @@ package com.runningoutofbreadth.spotifystreamer;
 
 import android.content.Context;
 import android.content.Intent;
-import android.net.ConnectivityManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -84,29 +83,21 @@ public class TopTenTracksFragment extends Fragment {
             String url;
 
             try {
-                //check for internet connection
-                if (hasInternet() == false) {
-                    Toast toast = Toast.makeText(getActivity().getApplicationContext(),
-                            "No internet!", Toast.LENGTH_SHORT);
-                    toast.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
-                    toast.show();
+                // if the album item contains pictures
+                // get smallest image available to conserve data usage
+                if (albumImages.size() > 0) {
+                    lastOne = albumImages.size() - 1;
+                    url = albumImages.get(lastOne).url;
+                    Picasso.with(getContext())
+                            .load(url)
+                            .placeholder(R.drawable.eigth_notes)
+                            .error(R.drawable.eigth_notes)
+                            .into(topTenViewHolder.albumImageView);
                 } else {
-                    // if the album item contains pictures
-                    // get smallest image available to conserve data usage
-                    if (albumImages.size() > 0) {
-                        lastOne = albumImages.size() - 1;
-                        url = albumImages.get(lastOne).url;
-                        Picasso.with(getContext())
-                                .load(url)
-                                .placeholder(R.drawable.eigth_notes)
-                                .error(R.drawable.eigth_notes)
-                                .into(topTenViewHolder.albumImageView);
-                    } else {
-                        // if there are no thumbnails, use a default local image
-                        Picasso.with(getContext())
-                                .load(R.drawable.eigth_notes)
-                                .into(topTenViewHolder.albumImageView);
-                    }
+                    // if there are no thumbnails, use a default local image
+                    Picasso.with(getContext())
+                            .load(R.drawable.eigth_notes)
+                            .into(topTenViewHolder.albumImageView);
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -143,14 +134,6 @@ public class TopTenTracksFragment extends Fragment {
     }
 
     @Override
-    public void onSaveInstanceState(Bundle outState) {
-
-//        outState.putString(ARTIST_ID_KEY, mArtistId);
-//        outState.putString(ARTIST_NAME_KEY, mArtistName);
-//        outState.putBoolean(PANE_KEY, mTwoPane);
-    }
-
-    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         final String LOG_TAG = TopTenTracksFragment.class.getSimpleName();
@@ -168,7 +151,6 @@ public class TopTenTracksFragment extends Fragment {
             Log.v(LOG_TAG, "Missing Artist ID" + mArtistId);
         }
 
-
         final View rootView = inflater.inflate(R.layout.fragment_top_tracks, container, false);
 
         tracksAdapter = new TracksAdapter(rootView.getContext(), R.layout.individual_track, mTracks);
@@ -177,11 +159,15 @@ public class TopTenTracksFragment extends Fragment {
         list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Bundle args = new Bundle();
-                args.putString(TrackPlayerFragment.ARTIST_NAME_KEY, mArtistName);
-                args.putInt(TrackPlayerFragment.POSITION_KEY, position);
-                args.putParcelable(TrackPlayerFragment.TRACK_LIST_KEY, mTracklist);
-                showPlayer(args);
+                if (!Utility.hasInternet(getActivity())){
+                    Utility.noInternetToast(getActivity());
+                }else {
+                    Bundle args = new Bundle();
+                    args.putString(TrackPlayerFragment.ARTIST_NAME_KEY, mArtistName);
+                    args.putInt(TrackPlayerFragment.POSITION_KEY, position);
+                    args.putParcelable(TrackPlayerFragment.TRACK_LIST_KEY, mTracklist);
+                    showPlayer(args);
+                }
             }
         });
 
@@ -190,7 +176,6 @@ public class TopTenTracksFragment extends Fragment {
     }
 
     // loads the dialogfragment that contains the player UI
-    // starts mediaplayerservice
     public void showPlayer(Bundle args) {
         TrackPlayerFragment trackPlayerFragment = new TrackPlayerFragment();
         FragmentManager fragmentManager = getFragmentManager();
@@ -207,19 +192,6 @@ public class TopTenTracksFragment extends Fragment {
                     .addToBackStack(null)
                     .commit();
         }
-        Intent intent = new Intent(getActivity(), com.runningoutofbreadth.spotifystreamer.MediaPlayerService.class);
-        intent.putExtras(args);
-        getActivity().startService(intent);
-    }
-
-    // determines whether or not an internet connection exists
-    private Boolean hasInternet() {
-        ConnectivityManager cm = (ConnectivityManager) getActivity()
-                .getSystemService(Context.CONNECTIVITY_SERVICE);
-        if (cm.getActiveNetworkInfo() == null) {
-            return false;
-        }
-        return true;
     }
 
     public class FetchTracks extends AsyncTask<String, Void, Tracks> {
@@ -230,7 +202,7 @@ public class TopTenTracksFragment extends Fragment {
             SpotifyApi api = new SpotifyApi();
             SpotifyService spotify = api.getService();
 
-            if (hasInternet() == true) {
+            if (Utility.hasInternet(getActivity())) {
                 try {
                     return spotify.getArtistTopTrack(mArtistId, Locale.getDefault().getCountry());
                 } catch (NullPointerException e) {
@@ -241,6 +213,7 @@ public class TopTenTracksFragment extends Fragment {
                     return null;
                 }
             } else {
+                Utility.noInternetToast(getActivity());
                 return null;
             }
         }

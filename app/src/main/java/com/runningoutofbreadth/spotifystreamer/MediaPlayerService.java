@@ -25,6 +25,13 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnPrepare
     // gets all of the extras
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        Log.v(LOG_TAG, "The onStartCommand has been executed");
+        if (mPlayer != null) {
+            if (mPlayer.isPlaying()) {
+                mPlayer.stop();
+                mPlayer.release();
+            }
+        }
         if (intent.getExtras() != null) {
             mPosition = intent.getExtras().getInt(TrackPlayerFragment.POSITION_KEY);
             mTrackList = intent.getExtras().getParcelable(TrackPlayerFragment.TRACK_LIST_KEY);
@@ -42,10 +49,9 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnPrepare
         return Service.START_NOT_STICKY;
     }
 
-
     @Override
     public void onCreate() {
-        // TODO: Start up the thread running the service.
+        // TODO: Start up the thread for the seekbar.
         Log.v(LOG_TAG, "THE SERVICE HAS BEEN CREATED!");
     }
 
@@ -72,6 +78,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnPrepare
         Log.v(LOG_TAG, "THE SERVICE HAS BEEN DESTROYED!");
         Toast.makeText(this, "service done", Toast.LENGTH_SHORT).show();
         mPlayer.stop();
+        mPlayer.release();
     }
 
     //methods for client
@@ -85,35 +92,42 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnPrepare
 
     public void stop() {
         mPlayer.stop();
+        mPlayer.release();
     }
 
     public void next() {
-        //talk to bound service to push
-        mPlayer.reset();
-        if (mPosition < mTrackList.tracks.size()-1) {
-            mPosition += 1;
-            mTrackPreviewUrl = mTrackList.tracks.get(mPosition).preview_url;
-            try {
-                mPlayer.setDataSource(mTrackPreviewUrl);
-            } catch (IOException e) {
-                e.printStackTrace();
+        if (Utility.hasInternet(getApplicationContext())) {
+            if (mPosition < mTrackList.tracks.size() - 1) {
+                mPlayer.reset();
+                mPosition += 1;
+                mTrackPreviewUrl = mTrackList.tracks.get(mPosition).preview_url;
+                try {
+                    mPlayer.setDataSource(mTrackPreviewUrl);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                mPlayer.prepareAsync();
             }
-            mPlayer.prepareAsync();
+        } else {
+            Utility.noInternetToast(getApplicationContext());
         }
     }
 
     public void previous() {
-        mPlayer.reset();
-        if (mPosition != 0) {
-            mPosition -= 1;
-            mTrackPreviewUrl = mTrackList.tracks.get(mPosition).preview_url;
-            try {
-                mPlayer.setDataSource(mTrackPreviewUrl);
-            } catch (IOException e) {
-                e.printStackTrace();
+        if (Utility.hasInternet(getApplicationContext())) {
+            if (mPosition != 0) {
+                mPlayer.reset();
+                mPosition -= 1;
+                mTrackPreviewUrl = mTrackList.tracks.get(mPosition).preview_url;
+                try {
+                    mPlayer.setDataSource(mTrackPreviewUrl);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                mPlayer.prepareAsync();
             }
-            mPlayer.prepareAsync();
+        } else {
+            Utility.noInternetToast(getApplicationContext());
         }
     }
-
 }

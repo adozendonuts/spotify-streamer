@@ -148,11 +148,8 @@ public class SearchFragment extends Fragment {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 //check if internet is connected. Toast if not.
-                if (cm.getActiveNetworkInfo() == null) {
-                    Toast toast = Toast.makeText(getActivity().getApplicationContext(),
-                            "No internet!", Toast.LENGTH_SHORT);
-                    toast.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
-                    toast.show();
+                if (!Utility.hasInternet(getActivity())) {
+                    Utility.noInternetToast(getActivity());
                 } else {
                     // send info to mainactivity and have the onItemSelected method handle
                     // whether it should open a new activity or load a fragment
