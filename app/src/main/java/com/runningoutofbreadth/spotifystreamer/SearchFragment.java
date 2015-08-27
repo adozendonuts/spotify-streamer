@@ -165,7 +165,7 @@ public class SearchFragment extends Fragment {
         editText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
                 v = editText;
-                search = "neyo"; //v.getText().toString();
+                search = v.getText().toString();
 
                 //runs once Done is pressed.
                 if (!search.isEmpty()) {
