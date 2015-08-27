@@ -195,7 +195,7 @@ public class TopTenTracksFragment extends Fragment {
     }
 
     public class FetchTracks extends AsyncTask<String, Void, Tracks> {
-        private final String LOG_TAG = FetchTracks.class.getSimpleName();
+//        private final String LOG_TAG = FetchTracks.class.getSimpleName();
         private Toast toast;
 
         protected Tracks doInBackground(String... params) {

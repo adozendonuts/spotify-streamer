@@ -38,6 +38,7 @@
                 android:padding="8dp" />
 
             <ImageView
+                android:contentDescription="@string/album_cover"
                 android:id="@+id/player_album_cover"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -96,6 +97,7 @@
             android:orientation="horizontal">
 
             <ImageView
+                android:contentDescription="@string/previous"
                 android:id="@+id/player_track_previous_button"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -106,6 +108,7 @@
                 android:src="@android:drawable/ic_media_previous" />
 
             <ImageView
+                android:contentDescription="@string/play_pause_button"
                 android:id="@+id/player_play_pause_button"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -115,6 +118,7 @@
                 android:src="@android:drawable/ic_media_pause" />
 
             <ImageView
+                android:contentDescription="@string/next"
                 android:id="@+id/player_track_next_button"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"

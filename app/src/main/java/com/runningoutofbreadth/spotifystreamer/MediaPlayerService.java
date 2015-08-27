@@ -5,7 +5,9 @@ import android.content.Intent;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.Binder;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -15,11 +17,12 @@ import kaaes.spotify.webapi.android.models.Tracks;
 
 public class MediaPlayerService extends Service implements MediaPlayer.OnPreparedListener {
     private final String LOG_TAG = MediaPlayerService.class.getSimpleName();
-    MediaPlayer mPlayer;
+    MediaPlayer mPlayer = new MediaPlayer();
     private Tracks mTrackList;
     private int mPosition;
     private String mTrackPreviewUrl;
     private final IBinder mBinder = new MusicBinder();
+    Handler handler = new Handler(Looper.getMainLooper());
 
     // this runs when bindService is called in the fragment
     // gets all of the extras
@@ -35,7 +38,9 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnPrepare
         if (intent.getExtras() != null) {
             mPosition = intent.getExtras().getInt(TrackPlayerFragment.POSITION_KEY);
             mTrackList = intent.getExtras().getParcelable(TrackPlayerFragment.TRACK_LIST_KEY);
-            mTrackPreviewUrl = mTrackList.tracks.get(mPosition).preview_url;
+            if (mTrackList != null) {
+                mTrackPreviewUrl = mTrackList.tracks.get(mPosition).preview_url;
+            }
             mPlayer = new MediaPlayer();
             mPlayer.setOnPreparedListener(this);
             mPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
@@ -44,15 +49,16 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnPrepare
             } catch (IOException e) {
                 e.printStackTrace();
             }
+            // change pause button back to play on song completion
+            mPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                @Override
+                public void onCompletion(MediaPlayer mp) {
+                    TrackPlayerFragment.mPlayButton.setImageResource(android.R.drawable.ic_media_play);
+                }
+            });
             mPlayer.prepareAsync();
         }
         return Service.START_NOT_STICKY;
-    }
-
-    @Override
-    public void onCreate() {
-        // TODO: Start up the thread for the seekbar.
-        Log.v(LOG_TAG, "THE SERVICE HAS BEEN CREATED!");
     }
 
     public class MusicBinder extends Binder {
@@ -65,6 +71,9 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnPrepare
     public void onPrepared(MediaPlayer mediaPlayer) {
         Log.v(LOG_TAG, "THE MEDIAPLAYER IS PREPARED!");
         mediaPlayer.start();
+        // change play button back to pause on song playback start
+        TrackPlayerFragment.mPlayButton.setImageResource(android.R.drawable.ic_media_pause);
+        handler.postDelayed(TrackPlayerFragment.updateSeekBar, 1000);
         Log.v(LOG_TAG, "THE MEDIAPLAYER HAS STARTED!");
     }
 
@@ -93,6 +102,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnPrepare
     public void stop() {
         mPlayer.stop();
         mPlayer.release();
+        mPlayer = null;
     }
 
     public void next() {
