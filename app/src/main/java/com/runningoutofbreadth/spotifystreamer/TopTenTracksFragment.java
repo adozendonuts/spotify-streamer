@@ -221,7 +221,7 @@ public class TopTenTracksFragment extends Fragment {
         @Override
         public void onPostExecute(Tracks result) {
             tracksAdapter.clear();
-            if (result != null && result.tracks != null) {
+            if (result != null && result.tracks != null && !result.tracks.isEmpty()) {
                 if (toast != null) {
                     toast.cancel();
                 }

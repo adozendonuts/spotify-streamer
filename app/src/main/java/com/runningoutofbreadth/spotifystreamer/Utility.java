@@ -1,12 +1,17 @@
 package com.runningoutofbreadth.spotifystreamer;
 
 import android.content.Context;
+import android.media.MediaPlayer;
 import android.net.ConnectivityManager;
 import android.view.Gravity;
 import android.widget.Toast;
 
+import java.io.IOException;
+
+import kaaes.spotify.webapi.android.models.Tracks;
+
 /**
- * Created by SandD on 8/27/2015.
+ * Helper methods
  */
 public class Utility {
 
@@ -27,5 +32,18 @@ public class Utility {
         toast.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
         toast.show();
     }
+
+    // MEDIAPLAYERSERVICE - reset and repair player, load url
+    public static void loadTrack(Tracks trackList, int position, MediaPlayer mPlayer){
+        mPlayer.reset();
+        String trackUrl = trackList.tracks.get(position).preview_url;
+        try {
+            mPlayer.setDataSource(trackUrl);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        mPlayer.prepareAsync();
+    }
+
 }
 

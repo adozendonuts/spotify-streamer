@@ -3,6 +3,7 @@ package com.runningoutofbreadth.spotifystreamer;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.view.MenuItem;
 
 
 public class MainActivity extends AppCompatActivity implements SearchFragment.TopTenTracksCallback {
@@ -47,5 +48,17 @@ public class MainActivity extends AppCompatActivity implements SearchFragment.To
             intent.putExtra(TopTenTracksFragment.ARTIST_NAME_KEY, artistName);
             startActivity(intent);
         }
+    }
+
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+        if (id == R.id.action_settings) {
+            return true;
+        } else if (id == android.R.id.home) {
+            // go back to search results instead of blank main activity
+            onBackPressed();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 }

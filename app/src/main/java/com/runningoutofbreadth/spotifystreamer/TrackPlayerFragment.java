@@ -192,6 +192,15 @@ public class TrackPlayerFragment extends DialogFragment {
         mCurrentTimeTextView = (TextView) rootView.findViewById(R.id.player_track_time_start);
 
         mPlayButton = (ImageView) rootView.findViewById(R.id.player_play_pause_button);
+
+        //on view recreation (rotation), if player & service already running, show correct button
+        if (mService != null && mService.mPlayer != null){
+            if (mService.mPlayer.isPlaying()){
+                mPlayButton.setImageResource(android.R.drawable.ic_media_pause);
+            }else{
+                mPlayButton.setImageResource(android.R.drawable.ic_media_play);
+            }
+        }
         mPlayButton.setOnClickListener(
                 new View.OnClickListener() {
                     public void onClick(View v) {
@@ -264,7 +273,7 @@ public class TrackPlayerFragment extends DialogFragment {
     // to help test resizing
     public void picassoLoader(String stringUrl, ImageView imageView) {
         Picasso.with(getActivity().getApplicationContext()).load(stringUrl)
-                .resize(300, 300)
+                .resize(400, 400)
                 .centerCrop()
                 .into(imageView);
     }

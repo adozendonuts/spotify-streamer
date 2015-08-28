@@ -108,15 +108,8 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnPrepare
     public void next() {
         if (Utility.hasInternet(getApplicationContext())) {
             if (mPosition < mTrackList.tracks.size() - 1) {
-                mPlayer.reset();
                 mPosition += 1;
-                mTrackPreviewUrl = mTrackList.tracks.get(mPosition).preview_url;
-                try {
-                    mPlayer.setDataSource(mTrackPreviewUrl);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                mPlayer.prepareAsync();
+                Utility.loadTrack(mTrackList, mPosition, mPlayer);
             }
         } else {
             Utility.noInternetToast(getApplicationContext());
@@ -126,15 +119,8 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnPrepare
     public void previous() {
         if (Utility.hasInternet(getApplicationContext())) {
             if (mPosition != 0) {
-                mPlayer.reset();
                 mPosition -= 1;
-                mTrackPreviewUrl = mTrackList.tracks.get(mPosition).preview_url;
-                try {
-                    mPlayer.setDataSource(mTrackPreviewUrl);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                mPlayer.prepareAsync();
+                Utility.loadTrack(mTrackList, mPosition, mPlayer);
             }
         } else {
             Utility.noInternetToast(getApplicationContext());
